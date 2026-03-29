@@ -1,0 +1,43 @@
+{# HTMX partial: delete confirmation modal. #}
+<div class="modal fade" id="pcModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down" style="max-width:460px;">
+    <div class="modal-content border-0">
+
+      <div class="modal-body p-4 text-center">
+        <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center
+                    justify-content-center mb-3" style="width:60px;height:60px;">
+          <i class="bi bi-trash-fill text-danger fs-3"></i>
+        </div>
+        <h5 class="fw-bold mb-1">Удалить компьютер?</h5>
+        <p class="text-muted small mb-3">Это действие необратимо.</p>
+
+        <div class="rounded-3 p-3 text-start mb-4 pc-delete-info">
+          <dl class="row mb-0 small">
+            <dt class="col-5 text-muted fw-normal">Инв. номер</dt>
+            <dd class="col-7 fw-semibold mb-1">{{ pc.inventory_number }}</dd>
+            <dt class="col-5 text-muted fw-normal">Наименование</dt>
+            <dd class="col-7 mb-1">{{ pc.name }}</dd>
+            <dt class="col-5 text-muted fw-normal">Площадка</dt>
+            <dd class="col-7 mb-0 text-muted">{{ pc.location }}</dd>
+          </dl>
+        </div>
+
+        <form method="post"
+              hx-post="{% url 'pc-delete-modal' pc.pk %}"
+              hx-target="#modal-container"
+              hx-swap="innerHTML"
+              class="d-flex gap-3 w-100">
+          {% csrf_token %}
+          <button type="button" class="btn btn-outline-secondary flex-grow-1"
+                  data-bs-dismiss="modal">
+            Отмена
+          </button>
+          <button type="submit" class="btn btn-danger flex-grow-1">
+            <i class="bi bi-trash me-1"></i>Удалить
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

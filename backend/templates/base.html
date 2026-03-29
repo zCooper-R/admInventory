@@ -1,0 +1,253 @@
+{% load static inventory_tags %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#111827">
+  <title>{% block title %}{{ site_settings.system_title|default:"IT Инвентарь" }}{% endblock %}</title>
+
+  <!--
+    Anti-FOUC: apply saved theme BEFORE any CSS renders.
+    Must be the very first <script> in <head>.
+  -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('invTheme') || 'light';
+      document.documentElement.setAttribute('data-bs-theme', t);
+      document.documentElement.setAttribute('data-density', localStorage.getItem('invDensity') || 'normal');
+    }());
+  </script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'inventory/css/main.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<div class="d-flex" id="wrapper">
+
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+  <nav id="sidebar">
+    <div class="sidebar-brand">
+      <i class="bi bi-pc-display-horizontal"></i>
+      <span class="brand-text">{{ site_settings.system_title|default:"IT Инвентарь" }}</span>
+    </div>
+
+    <ul class="sidebar-nav">
+
+      <li class="sidebar-section">Обзор</li>
+      <li>
+        <a href="{% url 'dashboard' %}"
+           class="sidebar-link {% if nav_active == 'dashboard' %}active{% endif %}">
+          <i class="bi bi-speedometer2"></i><span>Дашборд</span>
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'pc-list' %}"
+           class="sidebar-link {% if nav_active == 'computers' %}active{% endif %}">
+          <i class="bi bi-pc-display"></i><span>Компьютеры</span>
+        </a>
+      </li>
+
+      <li class="sidebar-section">Аналитика</li>
+      <li>
+        <a href="{% url 'budget-report' %}"
+           class="sidebar-link {% if nav_active == 'budget' %}active{% endif %} position-relative">
+          <i class="bi bi-graph-up-arrow"></i><span>Бюджет / Замены</span>
+          <!-- Initial value reused from topbar; HTMX refreshes via OOB -->
+          <span id="sidebar-critical-badge">
+            {% if crit_init %}<span class="sidebar-badge">{{ crit_init }}</span>{% endif %}
+          </span>
+        </a>
+      </li>
+
+      <li class="sidebar-section">Инструменты</li>
+      <li>
+        <a href="{% url 'pc-import' %}"
+           class="sidebar-link {% if nav_active == 'import' %}active{% endif %}">
+          <i class="bi bi-upload"></i><span>Импорт Excel</span>
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'pc-export' %}" class="sidebar-link">
+          <i class="bi bi-download"></i><span>Экспорт Excel</span>
+        </a>
+      </li>
+
+      <li class="sidebar-section">Система</li>
+      {% if user.is_superuser or user.role == 'admin' %}
+      <li>
+        <a href="{% url 'system-settings' %}"
+           class="sidebar-link {% if nav_active == 'settings' %}active{% endif %}">
+          <i class="bi bi-sliders"></i><span>Настройки</span>
+        </a>
+      </li>
+      {% endif %}
+      <li>
+        <a href="/admin/" class="sidebar-link" target="_blank">
+          <i class="bi bi-gear"></i><span>Администрирование</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="sidebar-link" id="shortcutsLink" title="Горячие клавиши">
+          <i class="bi bi-keyboard"></i><span>Горячие клавиши</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ═══ MAIN CONTENT ══════════════════════════════════════════════════════ -->
+  <div id="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-topbar" id="sidebarToggle" title="Свернуть меню (Ctrl+B)">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <!-- Breadcrumb area -->
+        <nav class="d-none d-md-block" aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Главная</a></li>
+            {% block breadcrumb %}{% endblock %}
+          </ol>
+        </nav>
+      </div>
+
+      <div class="topbar-right">
+        <!--
+          Hidden HTMX trigger: refreshes both badge OOB targets.
+          Fires on page load, every 60 s, and on pcSaved/pcDeleted events.
+        -->
+        <span id="badge-htmx-trigger"
+              hx-get="{% url 'critical-count-partial' %}"
+              hx-trigger="load, every 60s, pcSaved from:body, pcDeleted from:body"
+              hx-swap="none"
+              style="display:none;"></span>
+
+        <!-- Critical PC alert (initial render; HTMX refreshes both badges via OOB) -->
+        {% critical_pc_count as crit_init %}
+        <span id="topbar-critical-badge">
+          {% if crit_init %}
+          <a href="{% url 'budget-report' %}"
+             class="btn btn-sm btn-danger topbar-alert position-relative"
+             title="{{ crit_init }} ПК требуют замены">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span class="topbar-badge">{{ crit_init }}</span>
+          </a>
+          {% endif %}
+        </span>
+
+        <!-- Density toggle (only meaningful on list pages) -->
+        <button id="densityToggle" class="btn btn-sm btn-topbar" title="Плотность таблицы">
+          <i class="bi bi-layout-three-columns" id="densityIcon"></i>
+        </button>
+
+        <!-- Theme toggle -->
+        <button id="themeToggle" class="btn btn-sm btn-topbar" title="Сменить тему (T)">
+          <i class="bi bi-sun-fill" id="themeIcon"></i>
+        </button>
+
+        <!-- User info -->
+        {% if user.is_authenticated %}
+        <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2 text-muted-topbar small">
+            <div class="avatar-sm">{{ user.username|first|upper }}</div>
+            <span class="d-none d-lg-inline fw-medium">
+              {{ user.get_full_name|default:user.username }}
+            </span>
+          </div>
+          <a href="/admin/logout/" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-box-arrow-right me-1"></i>Выйти
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-content">
+
+      <!-- Django flash messages (full-page actions) -->
+      {% if messages %}
+      <div id="flash-messages" class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm border-0" role="alert">
+          {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill flex-shrink-0"></i>
+          {% elif message.tags == 'danger' %}<i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+          {% else %}<i class="bi bi-info-circle-fill flex-shrink-0"></i>{% endif %}
+          <span>{{ message }}</span>
+          <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- ═══ FOOTER ══════════════════════════════════════════════════════════ -->
+    <footer class="page-footer">
+      <span>© 2026–{% now "Y" %} &nbsp;<strong>Литвин Олег Олегович</strong></span>
+      <span class="footer-sep">·</span>
+      <a href="mailto:qucooper@yandex.ru" class="footer-link">qucooper@yandex.ru</a>
+      <span class="footer-sep">·</span>
+      <span>{{ site_settings.system_title|default:"admInventory" }}&nbsp;<span class="text-muted">v{{ APP_VERSION }}</span></span>
+    </footer>
+
+  </div>
+</div>
+
+<!-- ═══ HTMX MODAL CONTAINER ════════════════════════════════════════════════ -->
+<div id="modal-container"></div>
+
+<!-- ═══ TOAST CONTAINER ══════════════════════════════════════════════════════ -->
+<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+<!-- ═══ KEYBOARD SHORTCUTS MODAL ════════════════════════════════════════════ -->
+<div class="modal fade" id="shortcutsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:500px;">
+    <div class="modal-content">
+      <div class="modal-header border-bottom py-3">
+        <h5 class="modal-title fw-semibold">
+          <i class="bi bi-keyboard me-2 text-primary"></i>Горячие клавиши
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm mb-0">
+          <tbody>
+            <tr><td><kbd>/</kbd></td><td>Фокус на поиск</td></tr>
+            <tr><td><kbd>N</kbd></td><td>Добавить новый ПК</td></tr>
+            <tr><td><kbd>T</kbd></td><td>Сменить тему (светлая / тёмная)</td></tr>
+            <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Свернуть/развернуть боковое меню</td></tr>
+            <tr><td><kbd>?</kbd></td><td>Показать эту подсказку</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Закрыть модальное окно</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BACK TO TOP ══════════════════════════════════════════════════════════ -->
+<button id="backToTop"
+        class="btn btn-primary rounded-circle shadow"
+        title="Наверх"
+        style="position:fixed;bottom:80px;right:24px;width:44px;height:44px;
+               display:none;align-items:center;justify-content:center;z-index:999;padding:0;">
+  <i class="bi bi-chevron-up"></i>
+</button>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+<script src="{% static 'inventory/js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

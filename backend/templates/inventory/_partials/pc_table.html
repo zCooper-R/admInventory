@@ -1,0 +1,234 @@
+{% load inventory_tags %}
+{# Partial returned by HTMX for the PC list table.
+   On desktop: standard striped table.
+   On mobile (<768px): CSS transforms rows into cards via .pc-mobile-card-table.
+   Out-of-band swap updates the subtitle counter. #}
+
+<!-- OOB: update result count in the page subtitle -->
+<span id="result-count" hx-swap-oob="true">
+  Найдено: <strong>{{ total_count }}</strong> записей
+</span>
+
+<div class="card table-card">
+  <div class="card-body p-0">
+    <div class="table-responsive pc-mobile-card-table">
+      <table class="table table-striped table-hover align-middle mb-0">
+        <thead>
+          <tr class="table-header-row">
+            <th class="ps-3" style="width:155px;">
+              <a class="sort-link"
+                 hx-get="{% sort_url 'inventory_number' %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">
+                Инв. номер
+                {% if sort == 'inventory_number' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}
+              </a>
+            </th>
+            <th>
+              <a class="sort-link"
+                 hx-get="{% sort_url 'name' %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">
+                Наименование
+                {% if sort == 'name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}
+              </a>
+            </th>
+            <th style="min-width:150px;" class="d-none d-lg-table-cell">
+              <a class="sort-link"
+                 hx-get="{% sort_url 'cpu' %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">
+                Процессор
+                {% if sort == 'cpu' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}
+              </a>
+            </th>
+            <th style="width:85px;" class="d-none d-md-table-cell">
+              <a class="sort-link"
+                 hx-get="{% sort_url 'ram' %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">
+                ОЗУ
+                {% if sort == 'ram' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}
+              </a>
+            </th>
+            <th style="width:100px;" class="d-none d-lg-table-cell">Диск</th>
+            <th>
+              <a class="sort-link"
+                 hx-get="{% sort_url 'status' %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">
+                Статус
+                {% if sort == 'status' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}
+              </a>
+            </th>
+            <th>
+              <a class="sort-link"
+                 hx-get="{% sort_url 'location__name' %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">
+                Площадка
+                {% if sort == 'location__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}
+              </a>
+            </th>
+            <th class="d-none d-xl-table-cell">Пользователь</th>
+            <th class="pe-3 text-end" style="width:90px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pc in pcs %}
+          <tr id="pc-row-{{ pc.pk }}">
+
+            {# ── Инв. номер ── #}
+            <td class="ps-3 col-inv">
+              <div class="fw-semibold text-primary small">{{ pc.inventory_number }}</div>
+              {# Mobile: show name + status inline below inv. number #}
+              <div class="d-md-none mt-1">
+                <span class="fw-medium">{{ pc.name }}</span>
+                <span class="status-badge status-{{ pc.status }} ms-2">{{ pc.get_status_display }}</span>
+              </div>
+              {# Mobile: location + user below that #}
+              <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">
+                <i class="bi bi-geo-alt me-1"></i>{{ pc.location|truncatechars:30 }}
+                {% if pc.assigned_to %}
+                  <span class="ms-2"><i class="bi bi-person me-1"></i>{{ pc.assigned_to }}</span>
+                {% endif %}
+              </div>
+              {# Mobile: hardware specs #}
+              <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">
+                {% if pc.cpu %}<span>{{ pc.cpu|truncatechars:22 }}</span>{% endif %}
+                {% if pc.ram %} · {{ pc.ram }} ГБ{% endif %}
+                {% if pc.storage_type and pc.storage_type != 'None' %} · {{ pc.storage_type }}{% if pc.storage_size %} {{ pc.storage_size }}G{% endif %}{% endif %}
+              </div>
+            </td>
+
+            {# ── Наименование (hidden on mobile, shown inside inv cell) ── #}
+            <td class="col-name d-none d-md-table-cell">{{ pc.name }}</td>
+
+            {# ── CPU (tablet+) ── #}
+            <td class="col-cpu text-muted small d-none d-lg-table-cell">{{ pc.cpu|default:"—"|truncatechars:26 }}</td>
+
+            {# ── RAM (tablet+) ── #}
+            <td class="col-ram d-none d-md-table-cell">
+              {% if pc.ram %}
+                {% if pc.ram < 8 %}
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ pc.ram }} ГБ ⚠</span>
+                {% else %}
+                  <span class="badge bg-light text-dark border">{{ pc.ram }} ГБ</span>
+                {% endif %}
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+
+            {# ── Disk (desktop+) ── #}
+            <td class="col-disk text-muted small d-none d-lg-table-cell">
+              {% if pc.storage_type and pc.storage_type != 'None' %}
+                {% if pc.storage_type == 'HDD' %}
+                  <span class="text-warning-emphasis">{{ pc.storage_type }}</span>
+                {% else %}
+                  {{ pc.storage_type }}
+                {% endif %}
+                {% if pc.storage_size %} {{ pc.storage_size }}G{% endif %}
+              {% else %}—{% endif %}
+            </td>
+
+            {# ── Status (hidden on mobile, shown inside inv cell) ── #}
+            <td class="col-status d-none d-md-table-cell">
+              <span class="status-badge status-{{ pc.status }}">{{ pc.get_status_display }}</span>
+            </td>
+
+            {# ── Location (hidden on mobile) ── #}
+            <td class="col-loc text-muted small d-none d-md-table-cell">{{ pc.location|truncatechars:24 }}</td>
+
+            {# ── User (desktop xl+) ── #}
+            <td class="col-user text-muted small d-none d-xl-table-cell">{{ pc.assigned_to|default:"—" }}</td>
+
+            {# ── Actions ── #}
+            <td class="col-actions pe-3 text-end">
+              <div class="d-flex justify-content-end gap-1">
+                <button class="btn btn-sm btn-outline-primary action-btn"
+                        title="Редактировать"
+                        hx-get="{% url 'pc-edit-modal' pc.pk %}"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger action-btn"
+                        title="Удалить"
+                        hx-get="{% url 'pc-delete-modal' pc.pk %}"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-5">
+              <i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
+              <span class="text-muted">Компьютеры не найдены</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if pcs.has_other_pages %}
+  <div class="card-footer border-top py-3 px-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <small class="text-muted">
+        Стр. {{ pcs.number }} / {{ pcs.paginator.num_pages }}
+        &nbsp;({{ total_count }} записей)
+      </small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0 gap-1">
+          {% if pcs.has_previous %}
+          <li class="page-item">
+            <a class="page-link rounded"
+               hx-get="{% query_url page=pcs.previous_page_number %}"
+               hx-target="#pc-table-wrapper"
+               hx-push-url="true"
+               hx-include="#filterForm">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in pcs.paginator.page_range %}
+            {% if pcs.number == num %}
+            <li class="page-item active"><span class="page-link rounded">{{ num }}</span></li>
+            {% elif num > pcs.number|add:'-3' and num < pcs.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link rounded"
+                 hx-get="{% query_url page=num %}"
+                 hx-target="#pc-table-wrapper"
+                 hx-push-url="true"
+                 hx-include="#filterForm">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+          {% if pcs.has_next %}
+          <li class="page-item">
+            <a class="page-link rounded"
+               hx-get="{% query_url page=pcs.next_page_number %}"
+               hx-target="#pc-table-wrapper"
+               hx-push-url="true"
+               hx-include="#filterForm">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+  {% endif %}
+</div>

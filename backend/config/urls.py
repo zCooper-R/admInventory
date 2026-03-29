@@ -1,0 +1,40 @@
+"""
+Root URL configuration.
+
+Author : Литвин Олег Олегович <qucooper@yandex.ru>
+"""
+from django.contrib import admin
+from django.http import JsonResponse
+from django.urls import include, path
+from django.conf import settings
+from django.conf.urls.static import static
+
+from config.version import APP_NAME, RELEASE_DATE, VERSION
+
+
+def api_version(request):
+    """GET /api/version/ — returns current application version as JSON."""
+    return JsonResponse({
+        "app":     APP_NAME,
+        "version": VERSION,
+        "released": RELEASE_DATE,
+        "status":  "ok",
+    })
+
+
+urlpatterns = [
+    path("admin/",       admin.site.urls),
+    path("",             include("apps.inventory.urls")),
+    path("api/v1/",      include("config.api_router")),
+    path("api/version/", api_version, name="api-version"),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,   document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL,  document_root=settings.STATIC_ROOT)
+
+    try:
+        import debug_toolbar
+        urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+    except ImportError:
+        pass

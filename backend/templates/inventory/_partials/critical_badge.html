@@ -1,0 +1,27 @@
+{% comment %}
+HTMX partial for the critical-PC count badge.
+Returned by /pcs/_critical-count/ and applied via OOB swaps to two
+independent elements:
+  #topbar-critical-badge  — alert button in the topbar
+  #sidebar-critical-badge — red pill badge next to "Бюджет / Замены"
+
+Triggered automatically when pcSaved / pcDeleted events fire,
+and polled every 60 s as a safety net.
+{% endcomment %}
+
+{# Topbar: button with badge — OOB swap #}
+<span id="topbar-critical-badge" hx-swap-oob="innerHTML">
+  {% if crit %}
+  <a href="{% url 'budget-report' %}"
+     class="btn btn-sm btn-danger topbar-alert position-relative"
+     title="{{ crit }} ПК требуют замены">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span class="topbar-badge">{{ crit }}</span>
+  </a>
+  {% endif %}
+</span>
+
+{# Sidebar: pill next to the menu item — OOB swap #}
+<span id="sidebar-critical-badge" hx-swap-oob="innerHTML">
+  {% if crit %}<span class="sidebar-badge">{{ crit }}</span>{% endif %}
+</span>
