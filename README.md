@@ -121,7 +121,7 @@ Organization ──< Location ──< Device
 ### Запуск
 
 ```bash
-git clone https://github.com/your-org/admInventory.git
+git clone https://github.com/zCooper-R/admInventory.git
 cd admInventory
 
 # Скопировать и настроить переменные окружения
@@ -152,7 +152,7 @@ docker compose exec web python manage.py createsuperuser
 
 ```bash
 # 1. Клонировать проект
-git clone https://github.com/your-org/admInventory.git
+git clone https://github.com/zCooper-R/admInventory.git
 cd admInventory
 
 # 2. Виртуальное окружение
