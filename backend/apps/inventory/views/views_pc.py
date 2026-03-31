@@ -106,15 +106,21 @@ def pc_list(request):
                 | Q(inventory_number__icontains=s)
                 | Q(cpu__icontains=s)
                 | Q(os__icontains=s)
+                | Q(employee_name__icontains=s)
+                | Q(organization__name__icontains=s)
+                | Q(position__name__icontains=s)
+                | Q(browser__name__icontains=s)
             )
         if status := form.cleaned_data.get("status"):
             qs = qs.filter(status=status)
         if location := form.cleaned_data.get("location"):
             qs = qs.filter(location=location)
+        if organization := form.cleaned_data.get("organization"):
+            qs = qs.filter(organization=organization)
 
     _ALLOWED_SORTS = {
         "name", "inventory_number", "cpu", "ram", "os",
-        "status", "location__name", "updated_at",
+        "status", "organization__name", "location__name", "updated_at",
     }
     sort      = request.GET.get("sort", "inventory_number")
     direction = request.GET.get("dir",  "asc")

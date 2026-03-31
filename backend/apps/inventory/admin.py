@@ -8,7 +8,7 @@ Registered models:
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 from django.contrib import admin
-from .models import Device, SystemSettings
+from .models import Browser, Device, Position, SystemSettings
 
 
 @admin.register(Device)
@@ -16,38 +16,87 @@ class DeviceAdmin(admin.ModelAdmin):
     list_display = (
         "inventory_number",
         "name",
+        "organization",
+        "position",
+        "browser",
         "device_type",
         "status",
         "location",
-        "assigned_to",
         "cpu",
         "ram",
         "os",
         "updated_at",
     )
-    list_filter = ("status", "device_type", "storage_type", "location__organization", "location")
-    search_fields = ("name", "inventory_number", "cpu", "os", "assigned_to__full_name", "assigned_to__username")
-    list_select_related = ("location__organization", "assigned_to")
+    list_filter = (
+        "status",
+        "device_type",
+        "storage_type",
+        "organization",
+        "position",
+        "browser",
+        "internet_speed",
+        "location__organization",
+        "location",
+    )
+    search_fields = (
+        "name",
+        "inventory_number",
+        "cpu",
+        "os",
+        "employee_name",
+        "provider",
+        "organization__name",
+        "position__name",
+        "browser__name",
+    )
+    list_select_related = ("organization", "position", "browser", "location__organization", "assigned_to")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("inventory_number",)
+    autocomplete_fields = ("organization", "position", "browser", "location", "assigned_to")
 
     fieldsets = (
         (
             "Идентификация",
             {
-                "fields": ("name", "inventory_number", "device_type", "status"),
+                "fields": ("name", "inventory_number", "device_type", "status", "organization"),
             },
         ),
         (
             "Характеристики",
             {
-                "fields": ("cpu", "ram", "storage_type", "storage_size", "os"),
+                "fields": (
+                    "cpu",
+                    "cpu_frequency_ghz",
+                    "ram",
+                    "storage_type",
+                    "storage_size",
+                    "os",
+                    "browser",
+                    "internet_speed",
+                    "provider",
+                ),
             },
         ),
         (
             "Назначение",
             {
-                "fields": ("location", "assigned_to"),
+                "fields": ("employee_name", "position", "location", "assigned_to"),
+            },
+        ),
+        (
+            "Признаки использования",
+            {
+                "fields": (
+                    "has_google_account",
+                    "has_apple_account",
+                    "has_microsoft_account",
+                    "is_attested",
+                    "uses_text",
+                    "uses_images",
+                    "uses_presentations",
+                    "uses_audio",
+                    "uses_video",
+                ),
             },
         ),
         (
@@ -60,7 +109,25 @@ class DeviceAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("location__organization", "assigned_to")
+        return super().get_queryset(request).select_related(
+            "organization",
+            "position",
+            "browser",
+            "location__organization",
+            "assigned_to",
+        )
+
+
+@admin.register(Position)
+class PositionAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "created_at")
+
+
+@admin.register(Browser)
+class BrowserAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "created_at")
 
 
 @admin.register(SystemSettings)

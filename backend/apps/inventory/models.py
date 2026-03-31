@@ -11,7 +11,7 @@ Author : Литвин Олег Олегович <qucooper@yandex.ru>
 from django.db import models
 from django.conf import settings
 
-from apps.locations.models import Location
+from apps.locations.models import Location, Organization
 
 
 class DeviceType(models.TextChoices):
@@ -32,6 +32,39 @@ class DeviceStatus(models.TextChoices):
     ACTIVE = "active", "Активен"
     BROKEN = "broken", "Сломан"
     WRITE_OFF = "write_off", "Списан"
+
+
+class InternetSpeed(models.TextChoices):
+    UP_TO_5 = "До 5 Мб/с", "До 5 Мб/с"
+    FROM_5_TO_50 = "От 5 до 50 Мб/с", "От 5 до 50 Мб/с"
+    FROM_50_TO_100 = "От 50 до 100 Мб/с", "От 50 до 100 Мб/с"
+    ABOVE_100 = "Свыше 100 Мб/с", "Свыше 100 Мб/с"
+
+
+class Position(models.Model):
+    name = models.CharField(max_length=255, unique=True, db_index=True, verbose_name="Должность")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
+
+    class Meta:
+        verbose_name = "Должность"
+        verbose_name_plural = "Должности"
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class Browser(models.Model):
+    name = models.CharField(max_length=120, unique=True, db_index=True, verbose_name="Браузер")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
+
+    class Meta:
+        verbose_name = "Браузер"
+        verbose_name_plural = "Браузеры"
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Device(models.Model):
@@ -86,12 +119,23 @@ class Device(models.Model):
         verbose_name="Статус",
         db_index=True,
     )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.PROTECT,
+        related_name="devices",
+        null=True,
+        blank=True,
+        verbose_name="Организация",
+        db_index=True,
+    )
     location = models.ForeignKey(
         Location,
         on_delete=models.PROTECT,
         related_name="devices",
         verbose_name="Площадка",
         db_index=True,
+        null=True,
+        blank=True,
     )
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -101,6 +145,55 @@ class Device(models.Model):
         related_name="assigned_devices",
         verbose_name="Назначен пользователю",
     )
+    employee_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Фамилия, инициалы сотрудника",
+    )
+    position = models.ForeignKey(
+        Position,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="devices",
+        verbose_name="Должность",
+        db_index=True,
+    )
+    browser = models.ForeignKey(
+        Browser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="devices",
+        verbose_name="Браузер",
+        db_index=True,
+    )
+    cpu_frequency_ghz = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Тактовая частота (ГГц)",
+    )
+    has_google_account = models.BooleanField(null=True, blank=True, verbose_name="Есть аккаунт Google")
+    has_apple_account = models.BooleanField(null=True, blank=True, verbose_name="Есть аккаунт Apple")
+    has_microsoft_account = models.BooleanField(null=True, blank=True, verbose_name="Есть аккаунт Microsoft")
+    internet_speed = models.CharField(
+        max_length=32,
+        choices=InternetSpeed.choices,
+        blank=True,
+        default="",
+        verbose_name="Скорость интернета",
+        db_index=True,
+    )
+    provider = models.CharField(max_length=255, blank=True, default="", verbose_name="Провайдер")
+    is_attested = models.BooleanField(null=True, blank=True, verbose_name="Аттестованный компьютер")
+    uses_text = models.BooleanField(null=True, blank=True, verbose_name="Работа с текстом")
+    uses_images = models.BooleanField(null=True, blank=True, verbose_name="Работа с картинками, фотографиями")
+    uses_presentations = models.BooleanField(null=True, blank=True, verbose_name="Создание презентаций")
+    uses_audio = models.BooleanField(null=True, blank=True, verbose_name="Работа с аудио")
+    uses_video = models.BooleanField(null=True, blank=True, verbose_name="Работа с видео")
     # ── Identification / provenance ─────────────────────────────────────────────
     purchase_date = models.DateField(
         null=True,
@@ -140,6 +233,9 @@ class Device(models.Model):
             models.Index(fields=["status", "location"]),
             models.Index(fields=["device_type", "status"]),
             models.Index(fields=["inventory_number"]),
+            models.Index(fields=["organization", "status"]),
+            models.Index(fields=["position"]),
+            models.Index(fields=["browser"]),
         ]
 
     def __str__(self) -> str:

@@ -1,4 +1,6 @@
-from django.db import models
+﻿from django.db import models
+
+from .normalization import normalize_organization_name
 
 
 class Organization(models.Model):
@@ -6,6 +8,13 @@ class Organization(models.Model):
         max_length=255,
         unique=True,
         verbose_name="Название организации",
+    )
+    normalized_name = models.CharField(
+        max_length=255,
+        unique=True,
+        db_index=True,
+        editable=False,
+        verbose_name="Нормализованное название",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
 
@@ -16,6 +25,10 @@ class Organization(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.normalized_name = normalize_organization_name(self.name)
+        super().save(*args, **kwargs)
 
 
 class Location(models.Model):

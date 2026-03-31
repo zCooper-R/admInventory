@@ -72,6 +72,22 @@
               {% if form.serial_number.help_text %}<div class="form-text">{{ form.serial_number.help_text }}</div>{% endif %}
             </div>
 
+            <div class="col-sm-6">
+              <label for="{{ form.organization.id_for_label }}" class="form-label fw-medium">
+                {{ form.organization.label }}&thinsp;<span class="text-danger" title="Обязательное поле">*</span>
+              </label>
+              {{ form.organization }}
+              <div class="invalid-feedback">
+                {% if form.organization.errors %}{{ form.organization.errors|join:", " }}{% else %}Выберите организацию.{% endif %}
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <label for="{{ form.employee_name.id_for_label }}" class="form-label fw-medium">{{ form.employee_name.label }}</label>
+              {{ form.employee_name }}
+              {% if form.employee_name.errors %}<div class="invalid-feedback d-block">{{ form.employee_name.errors|join:", " }}</div>{% endif %}
+            </div>
+
           </div>
           <p class="section-title mt-1">
             <i class="bi bi-cpu me-2 text-success"></i>Характеристики
@@ -90,6 +106,18 @@
               {{ form.os }}
               {% if form.os.errors %}<div class="invalid-feedback d-block">{{ form.os.errors|join:", " }}</div>{% endif %}
               {% if form.os.help_text %}<div class="form-text">{{ form.os.help_text }}</div>{% endif %}
+            </div>
+
+            <div class="col-sm-6">
+              <label for="{{ form.browser_name.id_for_label }}" class="form-label fw-medium">{{ form.browser_name.label }}</label>
+              {{ form.browser_name }}
+              {% if form.browser_name.errors %}<div class="invalid-feedback d-block">{{ form.browser_name.errors|join:", " }}</div>{% endif %}
+            </div>
+
+            <div class="col-sm-6">
+              <label for="{{ form.position_name.id_for_label }}" class="form-label fw-medium">{{ form.position_name.label }}</label>
+              {{ form.position_name }}
+              {% if form.position_name.errors %}<div class="invalid-feedback d-block">{{ form.position_name.errors|join:", " }}</div>{% endif %}
             </div>
 
             <div class="col-sm-2">
@@ -153,13 +181,6 @@
               {% if form.location.help_text %}<div class="form-text">{{ form.location.help_text }}</div>{% endif %}
             </div>
 
-            <div class="col-sm-4">
-              <label for="{{ form.assigned_to.id_for_label }}" class="form-label fw-medium">{{ form.assigned_to.label }}</label>
-              {{ form.assigned_to }}
-              {% if form.assigned_to.errors %}<div class="invalid-feedback d-block">{{ form.assigned_to.errors|join:", " }}</div>{% endif %}
-              {% if form.assigned_to.help_text %}<div class="form-text">{{ form.assigned_to.help_text }}</div>{% endif %}
-            </div>
-
           </div>
 
           {# Non-field errors #}
@@ -199,3 +220,14 @@
   document.getElementById('modalCancelBtn')?.addEventListener('click', closeModal);
 }());
 </script>
+
+<datalist id="browser-suggestions">
+  {% for value in form.browser_suggestions %}
+  <option value="{{ value }}"></option>
+  {% endfor %}
+</datalist>
+<datalist id="position-suggestions">
+  {% for value in form.position_suggestions %}
+  <option value="{{ value }}"></option>
+  {% endfor %}
+</datalist>

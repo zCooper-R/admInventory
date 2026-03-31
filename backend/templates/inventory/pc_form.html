@@ -52,6 +52,19 @@
               {% endif %}
               <div class="form-text">Уникальный инвентарный номер</div>
             </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">
+                {{ form.organization.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.organization }}
+              {% if form.organization.errors %}
+              <div class="text-danger small mt-1">{{ form.organization.errors.as_text }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">{{ form.employee_name.label }}</label>
+              {{ form.employee_name }}
+            </div>
           </div>
         </div>
       </div>
@@ -92,6 +105,14 @@
               <label class="form-label fw-medium">{{ form.os.label }}</label>
               {{ form.os }}
             </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-medium">{{ form.browser_name.label }}</label>
+              {{ form.browser_name }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-medium">{{ form.position_name.label }}</label>
+              {{ form.position_name }}
+            </div>
           </div>
         </div>
       </div>
@@ -117,17 +138,11 @@
             {% endif %}
           </div>
           <div class="mb-3">
-            <label class="form-label fw-medium">
-              {{ form.location.label }} <span class="text-danger">*</span>
-            </label>
+            <label class="form-label fw-medium">{{ form.location.label }}</label>
             {{ form.location }}
             {% if form.location.errors %}
             <div class="text-danger small mt-1">{{ form.location.errors.as_text }}</div>
             {% endif %}
-          </div>
-          <div>
-            <label class="form-label fw-medium">{{ form.assigned_to.label }}</label>
-            {{ form.assigned_to }}
           </div>
         </div>
       </div>
@@ -154,5 +169,16 @@
     </div><!-- /col-lg-4 -->
   </div><!-- /row -->
 </form>
+
+<datalist id="browser-suggestions">
+  {% for value in form.browser_suggestions %}
+  <option value="{{ value }}"></option>
+  {% endfor %}
+</datalist>
+<datalist id="position-suggestions">
+  {% for value in form.position_suggestions %}
+  <option value="{{ value }}"></option>
+  {% endfor %}
+</datalist>
 
 {% endblock %}

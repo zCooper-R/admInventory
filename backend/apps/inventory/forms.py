@@ -21,9 +21,8 @@ Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 from django import forms
 
-from apps.inventory.models import Device, DeviceStatus, StorageType, SystemSettings
-from apps.locations.models import Location
-from apps.users.models import User
+from apps.inventory.models import Browser, Device, DeviceStatus, Position, StorageType, SystemSettings
+from apps.locations.models import Location, Organization
 
 _FC = "form-control"
 _FS = "form-select"
@@ -46,11 +45,23 @@ class PCForm(forms.ModelForm):
     ``<div class="invalid-feedback">`` blocks become visible.
     """
 
+    browser_name = forms.CharField(
+        required=False,
+        label="Браузер",
+        widget=forms.TextInput(attrs={"class": _FC, "list": "browser-suggestions", "placeholder": "Например: Яндекс Браузер"}),
+    )
+    position_name = forms.CharField(
+        required=False,
+        label="Должность",
+        widget=forms.TextInput(attrs={"class": _FC, "list": "position-suggestions", "placeholder": "Например: ведущий специалист"}),
+    )
+
     class Meta:
         model = Device
         fields = [
             "name",
             "inventory_number",
+            "organization",
             "cpu",
             "ram",
             "storage_type",
@@ -58,21 +69,22 @@ class PCForm(forms.ModelForm):
             "os",
             "status",
             "location",
-            "assigned_to",
+            "employee_name",
             "purchase_date",
             "serial_number",
         ]
         widgets = {
             "name":             forms.TextInput(attrs={"class": _FC, "placeholder": "ПК-Бухгалтерия", "required": True}),
             "inventory_number": forms.TextInput(attrs={"class": _FC, "placeholder": "INV-2024-001", "required": True}),
+            "organization":     forms.Select(attrs={"class": _FS, "required": True}),
             "cpu":              forms.TextInput(attrs={"class": _FC, "placeholder": "Intel Core i5-12400 @ 2.50GHz"}),
             "ram":              forms.NumberInput(attrs={"class": _FC, "min": 1, "max": 4096, "placeholder": "16"}),
             "storage_type":     forms.Select(attrs={"class": _FS}),
             "storage_size":     forms.NumberInput(attrs={"class": _FC, "min": 1, "placeholder": "512"}),
             "os":               forms.TextInput(attrs={"class": _FC, "placeholder": "Windows 11 Pro 23H2"}),
             "status":           forms.Select(attrs={"class": _FS, "required": True}),
-            "location":         forms.Select(attrs={"class": _FS, "required": True}),
-            "assigned_to":      forms.Select(attrs={"class": _FS}),
+            "location":         forms.Select(attrs={"class": _FS}),
+            "employee_name":    forms.TextInput(attrs={"class": _FC, "placeholder": "Иванов И.И."}),
             "purchase_date":    forms.DateInput(attrs={"class": _FC, "type": "date"}),
             "serial_number":    forms.TextInput(attrs={"class": _FC, "placeholder": "SN-XXXXXXXX"}),
         }
@@ -116,18 +128,21 @@ class PCForm(forms.ModelForm):
         """
         super().__init__(*args, **kwargs)
 
-        optional = ["cpu", "ram", "storage_size", "os", "assigned_to", "purchase_date", "serial_number"]
+        optional = ["cpu", "ram", "storage_size", "os", "location", "employee_name", "purchase_date", "serial_number"]
         for name in optional:
             self.fields[name].required = False
 
-        self.fields["assigned_to"].empty_label = "— Не назначен —"
-        self.fields["assigned_to"].queryset = (
-            User.objects.filter(is_active=True).order_by("full_name", "username")
-        )
+        self.fields["organization"].required = True
+        self.fields["organization"].queryset = Organization.objects.order_by("name")
+        self.fields["organization"].empty_label = "— Выберите организацию —"
         self.fields["location"].queryset = (
             Location.objects.select_related("organization").order_by("organization__name", "name")
         )
-        self.fields["location"].empty_label = "— Выберите площадку —"
+        self.fields["location"].empty_label = "— Не выбрана —"
+        self.browser_suggestions = list(Browser.objects.order_by("name").values_list("name", flat=True))
+        self.position_suggestions = list(Position.objects.order_by("name").values_list("name", flat=True))
+        self.fields["browser_name"].initial = self.instance.browser.name if self.instance and self.instance.pk and self.instance.browser else ""
+        self.fields["position_name"].initial = self.instance.position.name if self.instance and self.instance.pk and self.instance.position else ""
 
         # Append is-invalid to fields that have server-side errors
         # so Bootstrap's invalid-feedback divs become visible.
@@ -137,6 +152,18 @@ class PCForm(forms.ModelForm):
                 existing = field.widget.attrs.get("class", "")
                 if "is-invalid" not in existing:
                     field.widget.attrs["class"] = existing + " is-invalid"
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        browser_name = (self.cleaned_data.get("browser_name") or "").strip()
+        position_name = (self.cleaned_data.get("position_name") or "").strip()
+
+        instance.browser = Browser.objects.get_or_create(name=browser_name)[0] if browser_name else None
+        instance.position = Position.objects.get_or_create(name=position_name)[0] if position_name else None
+
+        if commit:
+            instance.save()
+        return instance
 
 
 # ── PC list filter ─────────────────────────────────────────────────────────────
@@ -172,6 +199,12 @@ class PCFilterForm(forms.Form):
         empty_label="Все площадки",
         widget=forms.Select(attrs={"class": _FS}),
     )
+    organization = forms.ModelChoiceField(
+        required=False,
+        queryset=Organization.objects.order_by("name"),
+        empty_label="Все организации",
+        widget=forms.Select(attrs={"class": _FS}),
+    )
 
 
 # ── Excel import ──────────────────────────────────────────────────────────────
@@ -189,9 +222,10 @@ class PCImportForm(forms.Form):
             }
         ),
         help_text=(
-            "Файл должен содержать колонки: name, inventory_number, device_type, "
-            "cpu, ram, storage_type, storage_size, os, status, location. "
-            "Записи обновляются по полю inventory_number."
+            "Целевой формат: лист «Таблица данных» из выгрузки организации. "
+            "Обязательные колонки строки: Наименование юридического лица, Инв. №, "
+            "Наименование ОС, Оперативная память, Тип диска. "
+            "Записи обновляются по Инв. №."
         ),
     )
 
