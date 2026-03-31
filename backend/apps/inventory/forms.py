@@ -9,15 +9,15 @@ _FCHK = "form-check-input"
 
 
 class PCForm(forms.ModelForm):
-    has_google_account = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    has_apple_account = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    has_microsoft_account = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    is_certified = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    use_for_text = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    use_for_images = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    use_for_presentations = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    use_for_audio = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
-    use_for_video = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    has_google_account = forms.BooleanField(label="Аккаунт Google", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    has_apple_account = forms.BooleanField(label="Аккаунт Apple", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    has_microsoft_account = forms.BooleanField(label="Аккаунт Microsoft", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    is_certified = forms.BooleanField(label="Аттестованный компьютер", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_text = forms.BooleanField(label="Работа с текстом", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_images = forms.BooleanField(label="Работа с картинками/фотографиями", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_presentations = forms.BooleanField(label="Создание презентаций", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_audio = forms.BooleanField(label="Работа с аудио", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_video = forms.BooleanField(label="Работа с видео", required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
 
     class Meta:
         model = Device
