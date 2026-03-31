@@ -45,7 +45,7 @@ def pc_qs(user=None):
     see every PC regardless.
     """
     qs = Device.objects.filter(device_type=DeviceType.PC).select_related(
-        "location__organization", "assigned_to"
+        "organization", "location__organization", "assigned_to", "browser", "position"
     )
     if (
         user

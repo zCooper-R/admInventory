@@ -273,8 +273,8 @@ def build_budget_report(price_per_pc: int | None = None) -> BudgetReport:
 
     pcs = (
         Device.objects.filter(device_type=DeviceType.PC)
-        .select_related("location__organization", "assigned_to")
-        .order_by("location__organization__name", "location__name", "inventory_number")
+        .select_related("organization", "location__organization", "assigned_to")
+        .order_by("organization__name", "location__name", "inventory_number")
     )
 
     today = timezone.now().date()  # compute once, not once-per-PC
@@ -293,7 +293,7 @@ def build_budget_report(price_per_pc: int | None = None) -> BudgetReport:
         if key not in loc_map:
             loc_map[key] = {
                 "location_name":     a.pc.location.name if a.pc.location else "Без площадки",
-                "organization_name": (a.pc.location.organization.name if a.pc.location else ""),
+                "organization_name": (a.pc.organization.name if a.pc.organization_id else (a.pc.location.organization.name if a.pc.location else "")),
                 "total": 0,
                 "to_replace": 0,
                 "critical": 0,

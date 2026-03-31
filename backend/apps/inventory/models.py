@@ -1,17 +1,10 @@
-"""
-Inventory app models.
+﻿"""Inventory app models."""
 
-Defines the core Device model and supporting enumerations, plus the
-singleton SystemSettings model that stores operator-configurable
-parameters (thresholds, pricing, branding) without requiring a
-server restart or code redeploy.
-
-Author : Литвин Олег Олегович <qucooper@yandex.ru>
-"""
-from django.db import models
 from django.conf import settings
+from django.db import models
+from django.db.models import Q
 
-from apps.locations.models import Location
+from apps.locations.models import Location, Organization
 
 
 class DeviceType(models.TextChoices):
@@ -24,8 +17,6 @@ class DeviceType(models.TextChoices):
 class StorageType(models.TextChoices):
     HDD = "HDD", "HDD"
     SSD = "SSD", "SSD"
-    MIXED = "Mixed", "HDD + SSD"
-    NONE = "None", "Нет"
 
 
 class DeviceStatus(models.TextChoices):
@@ -34,17 +25,90 @@ class DeviceStatus(models.TextChoices):
     WRITE_OFF = "write_off", "Списан"
 
 
+class InternetSpeed(models.TextChoices):
+    UP_TO_5 = "up_to_5", "До 5 Мб/с"
+    FROM_5_TO_50 = "from_5_to_50", "От 5 до 50 Мб/с"
+    FROM_50_TO_100 = "from_50_to_100", "От 50 до 100 Мб/с"
+    ABOVE_100 = "above_100", "Свыше 100 Мб/с"
+
+
+class Browser(models.Model):
+    name = models.CharField(max_length=120, unique=True, verbose_name="Браузер")
+    normalized_name = models.CharField(max_length=120, unique=True, db_index=True, verbose_name="Нормализованное имя")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Браузер"
+        verbose_name_plural = "Браузеры"
+
+    def __str__(self) -> str:
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.normalized_name = (self.name or "").strip().lower()
+        super().save(*args, **kwargs)
+
+
+class Position(models.Model):
+    name = models.CharField(max_length=255, unique=True, verbose_name="Должность")
+    normalized_name = models.CharField(max_length=255, unique=True, db_index=True, verbose_name="Нормализованное имя")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Должность"
+        verbose_name_plural = "Должности"
+
+    def __str__(self) -> str:
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.normalized_name = " ".join((self.name or "").strip().lower().split())
+        super().save(*args, **kwargs)
+
+
 class Device(models.Model):
-    name = models.CharField(
-        max_length=255,
-        verbose_name="Наименование",
-        db_index=True,
-    )
+    name = models.CharField(max_length=255, blank=True, default="", verbose_name="Наименование", db_index=True)
     inventory_number = models.CharField(
         max_length=100,
-        unique=True,
+        blank=True,
+        default="",
         verbose_name="Инвентарный номер",
         db_index=True,
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.PROTECT,
+        related_name="devices",
+        verbose_name="Организация",
+        db_index=True,
+    )
+    location = models.ForeignKey(
+        Location,
+        on_delete=models.PROTECT,
+        related_name="devices",
+        verbose_name="Площадка",
+        db_index=True,
+        null=True,
+        blank=True,
+    )
+    employee_name = models.CharField(max_length=255, blank=True, default="", verbose_name="ФИО сотрудника")
+    position = models.ForeignKey(
+        Position,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="devices",
+        verbose_name="Должность",
+    )
+    browser = models.ForeignKey(
+        Browser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="devices",
+        verbose_name="Браузер",
     )
     device_type = models.CharField(
         max_length=20,
@@ -53,44 +117,44 @@ class Device(models.Model):
         verbose_name="Тип устройства",
         db_index=True,
     )
-    cpu = models.CharField(
-        max_length=255,
-        verbose_name="Процессор",
-        blank=True,
-    )
-    ram = models.PositiveIntegerField(
-        verbose_name="ОЗУ (ГБ)",
-        null=True,
-        blank=True,
-    )
+    cpu = models.CharField(max_length=255, verbose_name="Процессор", blank=True, default="")
+    cpu_frequency = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name="Тактовая частота (ГГц)")
+    ram = models.PositiveIntegerField(verbose_name="ОЗУ (ГБ)", null=True, blank=True)
     storage_type = models.CharField(
         max_length=10,
         choices=StorageType.choices,
         default=StorageType.HDD,
-        verbose_name="Тип накопителя",
+        verbose_name="Тип диска",
     )
-    storage_size = models.PositiveIntegerField(
-        verbose_name="Объём накопителя (ГБ)",
+    storage_size = models.PositiveIntegerField(verbose_name="Емкость диска (ГБ)", null=True, blank=True)
+    os = models.CharField(max_length=255, verbose_name="Операционная система", blank=True, default="")
+
+    has_google_account = models.BooleanField(null=True, blank=True, verbose_name="Аккаунт Google")
+    has_apple_account = models.BooleanField(null=True, blank=True, verbose_name="Аккаунт Apple")
+    has_microsoft_account = models.BooleanField(null=True, blank=True, verbose_name="Аккаунт Microsoft")
+
+    internet_speed = models.CharField(
+        max_length=20,
+        choices=InternetSpeed.choices,
         null=True,
         blank=True,
+        verbose_name="Скорость интернета",
+        db_index=True,
     )
-    os = models.CharField(
-        max_length=255,
-        verbose_name="Операционная система",
-        blank=True,
-    )
+    internet_provider = models.CharField(max_length=255, blank=True, default="", verbose_name="Провайдер")
+
+    is_attested = models.BooleanField(null=True, blank=True, verbose_name="Аттестованный компьютер")
+    work_with_text = models.BooleanField(null=True, blank=True, verbose_name="Работа с текстом")
+    work_with_images = models.BooleanField(null=True, blank=True, verbose_name="Работа с картинками/фотографиями")
+    create_presentations = models.BooleanField(null=True, blank=True, verbose_name="Создание презентаций")
+    work_with_audio = models.BooleanField(null=True, blank=True, verbose_name="Работа с аудио")
+    work_with_video = models.BooleanField(null=True, blank=True, verbose_name="Работа с видео")
+
     status = models.CharField(
         max_length=20,
         choices=DeviceStatus.choices,
         default=DeviceStatus.ACTIVE,
         verbose_name="Статус",
-        db_index=True,
-    )
-    location = models.ForeignKey(
-        Location,
-        on_delete=models.PROTECT,
-        related_name="devices",
-        verbose_name="Площадка",
         db_index=True,
     )
     assigned_to = models.ForeignKey(
@@ -101,21 +165,13 @@ class Device(models.Model):
         related_name="assigned_devices",
         verbose_name="Назначен пользователю",
     )
-    # ── Identification / provenance ─────────────────────────────────────────────
     purchase_date = models.DateField(
         null=True,
         blank=True,
         verbose_name="Дата приобретения",
-        help_text="Реальная дата покупки. Используется для расчёта возраста.",
+        help_text="Реальная дата покупки. Используется для расчета возраста.",
     )
-    serial_number = models.CharField(
-        max_length=100,
-        blank=True,
-        default="",
-        verbose_name="Серийный номер",
-    )
-
-    # ── Agent sync metadata ──────────────────────────────────────────────────────
+    serial_number = models.CharField(max_length=100, blank=True, default="", verbose_name="Серийный номер")
     agent_hostname = models.CharField(
         max_length=255,
         blank=True,
@@ -123,11 +179,7 @@ class Device(models.Model):
         verbose_name="Hostname (агент)",
         help_text="Имя компьютера в сети, заполняется автоматически агентом.",
     )
-    last_sync = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="Последняя синхронизация",
-    )
+    last_sync = models.DateTimeField(null=True, blank=True, verbose_name="Последняя синхронизация")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
@@ -135,35 +187,38 @@ class Device(models.Model):
     class Meta:
         verbose_name = "Устройство"
         verbose_name_plural = "Устройства"
-        ordering = ["inventory_number"]
+        ordering = ["inventory_number", "id"]
         indexes = [
-            models.Index(fields=["status", "location"]),
+            models.Index(fields=["status", "organization"]),
             models.Index(fields=["device_type", "status"]),
             models.Index(fields=["inventory_number"]),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["inventory_number"],
+                condition=~Q(inventory_number=""),
+                name="inventory_device_inventory_number_not_blank_uniq",
+            ),
+        ]
 
     def __str__(self) -> str:
-        return f"{self.name} [{self.inventory_number}]"
+        if self.inventory_number:
+            return f"{self.name or 'Устройство'} [{self.inventory_number}]"
+        return self.name or f"Устройство #{self.pk}"
 
+    def save(self, *args, **kwargs):
+        if self.location_id and not self.organization_id:
+            self.organization_id = self.location.organization_id
+        super().save(*args, **kwargs)
 
-# ── Singleton settings ─────────────────────────────────────────────────────────
 
 class SystemSettings(models.Model):
-    """
-    Singleton model for operator-configurable system parameters.
-
-    Only one row (pk=1) should ever exist.  Use ``SystemSettings.get()``
-    rather than querying directly.  All changes take effect immediately
-    (no redeploy required).
-    """
-
-    # ── Replacement-analysis thresholds ──────────────────────────────────────
     pc_min_ram_gb = models.PositiveIntegerField(
         default=8,
         verbose_name="Мин. допустимое ОЗУ (ГБ)",
         help_text=(
-            "ПК с объёмом ОЗУ ниже этого значения помечается как требующий замены "
-            "в бюджетном отчёте (критерий «Мало ОЗУ»)."
+            "ПК с объемом ОЗУ ниже этого значения помечается как требующий замены "
+            "в бюджетном отчете (критерий «Мало ОЗУ»)."
         ),
     )
     pc_max_age_years = models.PositiveIntegerField(
@@ -174,18 +229,14 @@ class SystemSettings(models.Model):
             "помечаются как устаревшие."
         ),
     )
-
-    # ── Budget defaults ───────────────────────────────────────────────────────
     pc_price_default = models.PositiveIntegerField(
         default=60_000,
         verbose_name="Стоимость замены ПК по умолчанию (₽)",
         help_text=(
             "Начальная цена за единицу на странице «Бюджет / Замены». "
-            "Пользователь может изменить её прямо на странице без сохранения."
+            "Пользователь может изменить ее прямо на странице без сохранения."
         ),
     )
-
-    # ── Branding ─────────────────────────────────────────────────────────────
     system_title = models.CharField(
         max_length=100,
         default="IT Инвентарь",
@@ -195,7 +246,7 @@ class SystemSettings(models.Model):
     system_subtitle = models.CharField(
         max_length=200,
         blank=True,
-        default="Учёт компьютерной техники",
+        default="Учет компьютерной техники",
         verbose_name="Подзаголовок",
         help_text="Краткое описание системы (необязательно).",
     )
@@ -208,18 +259,10 @@ class SystemSettings(models.Model):
         return "Настройки системы"
 
     _CACHE_KEY = "system_settings_singleton"
-    _CACHE_TTL = 60  # seconds
+    _CACHE_TTL = 60
 
     @classmethod
     def get(cls) -> "SystemSettings":
-        """
-        Return the singleton settings row, creating it with defaults if absent.
-
-        Results are cached in Django's default cache backend for
-        ``_CACHE_TTL`` seconds so successive requests within the same
-        minute share one DB hit.  The cache is invalidated automatically
-        whenever the record is saved (see :meth:`save`).
-        """
         from django.core.cache import cache
 
         obj = cache.get(cls._CACHE_KEY)
@@ -229,7 +272,6 @@ class SystemSettings(models.Model):
         return obj
 
     def save(self, *args, **kwargs):
-        """Save and immediately invalidate the cached singleton."""
         from django.core.cache import cache
 
         super().save(*args, **kwargs)

@@ -1,24 +1,7 @@
-"""
-Excel export service for PC devices.
+﻿"""Excel export service for PC devices."""
 
-Public API
-----------
-``export_pcs_to_excel() -> bytes``
-    Fetch all ``DeviceType.PC`` records from the database and serialize
-    them into an in-memory ``.xlsx`` file using pandas + openpyxl.
-    Returns the raw bytes suitable for streaming in an ``HttpResponse``.
-
-Usage::
-
-    excel_bytes = export_pcs_to_excel()
-    response = HttpResponse(excel_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = 'attachment; filename="computers.xlsx"'
-
-Author : Литвин Олег Олегович <qucooper@yandex.ru>
-"""
 import io
 import logging
-from datetime import datetime
 
 import pandas as pd
 
@@ -28,13 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 def export_pcs_to_excel() -> bytes:
-    """
-    Export all PC-type devices to an Excel file.
-    Returns bytes ready for an HttpResponse.
-    """
     pcs = (
         Device.objects.filter(device_type=DeviceType.PC)
-        .select_related("location__organization", "assigned_to")
+        .select_related("organization", "location__organization", "assigned_to")
         .order_by("inventory_number")
     )
 
@@ -42,12 +21,6 @@ def export_pcs_to_excel() -> bytes:
 
     rows = []
     for pc in pcs:
-        storage = ""
-        if pc.storage_type and pc.storage_type != "None":
-            storage = pc.storage_type
-            if pc.storage_size:
-                storage += f" {pc.storage_size} ГБ"
-
         rows.append(
             {
                 "inventory_number": pc.inventory_number,
@@ -59,7 +32,7 @@ def export_pcs_to_excel() -> bytes:
                 "os": pc.os or "",
                 "status": pc.get_status_display(),
                 "location": pc.location.name if pc.location else "",
-                "organization": pc.location.organization.name if pc.location else "",
+                "organization": pc.organization.name if pc.organization_id else "",
                 "assigned_to": str(pc.assigned_to) if pc.assigned_to else "",
             }
         )
@@ -86,8 +59,8 @@ def export_pcs_to_excel() -> bytes:
         "Наименование",
         "Процессор",
         "ОЗУ (ГБ)",
-        "Тип накопителя",
-        "Объём накопителя (ГБ)",
+        "Тип диска",
+        "Емкость диска (ГБ)",
         "Операционная система",
         "Статус",
         "Площадка",

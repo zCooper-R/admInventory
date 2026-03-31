@@ -25,6 +25,7 @@ from django.db import transaction
 
 from apps.inventory.models import Device, DeviceStatus, DeviceType, StorageType
 from apps.locations.models import Location, Organization
+from apps.locations.normalization import normalize_organization_name
 from apps.users.models import User, UserRole
 
 # Path: backend/apps/inventory/management/commands/ → [4] = backend/
@@ -42,7 +43,6 @@ _STATUS_MAP = {
 _STORAGE_TYPE_MAP = {
     "HDD":   StorageType.HDD,
     "SSD":   StorageType.SSD,
-    "Mixed": StorageType.MIXED,
 }
 
 
@@ -67,6 +67,7 @@ def _make_pc(idx: int, location: Location, era: str, prefix: str, hw: dict) -> d
         "storage_size":     storage_size,
         "os":               _RNG.choice(hw["os"][era]),
         "status":           _STATUS_MAP[_RNG.choice(hw["status_weights"][era])],
+        "organization":     location.organization,
         "location":         location,
         "purchase_date":    _rand_date(start, end),
         "serial_number":    f"SN{_RNG.randint(1_000_000, 9_999_999)}",
@@ -109,7 +110,11 @@ class Command(BaseCommand):
         # ── Build org / location map ───────────────────────────────────────────
         loc_map: dict[tuple[str, str], Location] = {}
         for org_def in catalog["organizations"]:
-            org, _ = Organization.objects.get_or_create(name=org_def["name"])
+            normalized_name = normalize_organization_name(org_def["name"])
+            org, _ = Organization.objects.get_or_create(
+                normalized_name=normalized_name,
+                defaults={"name": org_def["name"]},
+            )
             for loc_def in org_def["locations"]:
                 loc, created = Location.objects.get_or_create(
                     name=loc_def["name"],

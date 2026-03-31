@@ -1,4 +1,4 @@
-import factory
+﻿import factory
 from factory.django import DjangoModelFactory
 
 from apps.users.models import User, UserRole
@@ -28,6 +28,7 @@ class OrganizationFactory(DjangoModelFactory):
         model = Organization
 
     name = factory.Sequence(lambda n: f"Организация {n}")
+    normalized_name = factory.LazyAttribute(lambda obj: obj.name.lower())
 
 
 class LocationFactory(DjangoModelFactory):
@@ -52,5 +53,6 @@ class DeviceFactory(DjangoModelFactory):
     storage_size = 512
     os = "Windows 11 Pro"
     status = DeviceStatus.ACTIVE
-    location = factory.SubFactory(LocationFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+    location = factory.SubFactory(LocationFactory, organization=factory.SelfAttribute("..organization"))
     assigned_to = None

@@ -11,8 +11,8 @@ class LocationInline(admin.TabularInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name", "location_count", "created_at")
-    search_fields = ("name",)
+    list_display = ("name", "normalized_name", "location_count", "created_at")
+    search_fields = ("name", "normalized_name")
     inlines = [LocationInline]
 
     @admin.display(description="Площадок")
@@ -26,3 +26,4 @@ class LocationAdmin(admin.ModelAdmin):
     list_filter = ("organization",)
     search_fields = ("name", "address", "organization__name")
     list_select_related = ("organization",)
+    autocomplete_fields = ("organization",)

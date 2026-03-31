@@ -23,6 +23,7 @@ from rest_framework.response import Response
 from apps.inventory.filters import DeviceFilter
 from apps.inventory.models import Device, DeviceType
 from apps.inventory.serializers import DeviceDetailSerializer, DeviceListSerializer
+from apps.locations.models import Location
 
 logger = logging.getLogger(__name__)
 
@@ -51,14 +52,30 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     filterset_class    = DeviceFilter
-    search_fields      = ["name", "inventory_number", "cpu", "os", "location__name"]
+    search_fields      = [
+        "name",
+        "inventory_number",
+        "cpu",
+        "os",
+        "employee_name",
+        "location__name",
+        "organization__name",
+        "position__name",
+        "browser__name",
+    ]
     ordering_fields    = [
         "name", "inventory_number", "device_type", "status", "created_at", "updated_at",
     ]
     ordering = ["inventory_number"]
 
     def get_queryset(self):
-        return Device.objects.select_related("location__organization", "assigned_to").all()
+        return Device.objects.select_related(
+            "organization",
+            "location__organization",
+            "assigned_to",
+            "browser",
+            "position",
+        ).all()
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -88,7 +105,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
         cpu               str  optional
         ram               int  optional  (GB)
         os                str  optional
-        storage_type      str  optional  (HDD | SSD | Mixed)
+        storage_type      str  optional  (HDD | SSD)
         storage_size      int  optional  (GB)
         serial_number     str  optional
         purchase_date     str  optional  (ISO 8601: YYYY-MM-DD)
@@ -128,16 +145,27 @@ class DeviceViewSet(viewsets.ModelViewSet):
                     pass
 
         storage_type = request.data.get("storage_type")
-        if storage_type in ("HDD", "SSD", "Mixed", "None"):
+        if storage_type in ("HDD", "SSD"):
             defaults["storage_type"] = storage_type
 
         location_id = request.data.get("location_id")
         if location_id:
-            defaults["location_id"] = location_id
+            location = Location.objects.filter(pk=location_id).first()
+            if location:
+                defaults["location"] = location
+                defaults["organization"] = location.organization
 
         # purchase_date is only applied on initial creation to avoid
         # overwriting values that were set manually via the web UI.
         purchase_date_str = request.data.get("purchase_date")
+
+        if not defaults.get("organization"):
+            existing = Device.objects.filter(inventory_number=inv_number).first()
+            if not existing:
+                return Response(
+                    {"error": "location_id is required for new devices."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         device, created = Device.objects.update_or_create(
             inventory_number=inv_number,
