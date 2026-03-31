@@ -50,7 +50,6 @@ class Location(models.Model):
         on_delete=models.PROTECT,
         related_name="locations",
         verbose_name="Организация",
-        db_index=True,
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
 

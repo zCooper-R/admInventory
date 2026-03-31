@@ -21,8 +21,6 @@ except Exception as e:
   sleep 1
 done
 
-echo "Creating migrations (if any are missing)..."
-python manage.py makemigrations --noinput
 
 echo "Running migrations..."
 python manage.py migrate --noinput
