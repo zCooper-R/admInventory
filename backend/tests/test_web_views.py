@@ -57,3 +57,24 @@ class TestWebViews:
 
         r3 = client_auth.post(reverse("pc-delete", kwargs={"pk": device.pk}))
         assert r3.status_code == 302
+
+    def test_sorting_by_new_fields(self, client_auth):
+        org = OrganizationFactory(name="Орг С")
+        DeviceFactory(inventory_number="S-1", organization=org, os="Windows 11", cpu_model="Intel Core i7-12700", cpu_frequency=3.8, ram=16, storage_type="SSD", storage_size=512, provider="Провайдер Б")
+        DeviceFactory(inventory_number="S-2", organization=org, os="Windows 10", cpu_model="Intel Core i3-7100", cpu_frequency=2.9, ram=8, storage_type="HDD", storage_size=256, provider="Провайдер А")
+
+        response = client_auth.get(reverse("pc-list"), {"sort": "cpu_frequency", "dir": "asc"})
+        assert response.status_code == 200
+        page = response.context["pcs"]
+        freqs = [float(item.cpu_frequency or 0) for item in page.object_list[:2]]
+        assert freqs == sorted(freqs)
+
+        response2 = client_auth.get(reverse("pc-list"), {"sort": "provider", "dir": "asc"})
+        assert response2.status_code == 200
+
+    def test_russian_ui_labels_present(self, client_auth):
+        response = client_auth.get(reverse("pc-list"))
+        assert response.status_code == 200
+        body = response.content.decode("utf-8")
+        assert "Статус замены" in body
+        assert "Инв. номер" in body

@@ -5,7 +5,8 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q, Value
+from django.db.models.functions import Coalesce, Lower
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.inventory.forms import PCFilterForm, PCForm
@@ -14,6 +15,31 @@ from apps.inventory.services.budget import get_cached_budget_report
 from apps.inventory.views.common import htmx_close_and_refresh, is_htmx, pc_qs
 
 _PAGE_SIZE = 25
+
+
+def _apply_sorting(qs, sort: str, direction: str):
+    sort_map = {
+        "inventory_number": Lower(Coalesce("inventory_number", Value(""))),
+        "organization__name": Lower(Coalesce("organization__name", Value(""))),
+        "os": Lower(Coalesce("os", Value(""))),
+        "cpu_model": Lower(Coalesce("cpu_model", Value(""))),
+        "cpu_frequency": Coalesce("cpu_frequency", Value(-1.0)),
+        "ram": Coalesce("ram", Value(-1)),
+        "storage_type": Lower(Coalesce("storage_type", Value(""))),
+        "storage_size": Coalesce("storage_size", Value(-1)),
+        "browser__name": Lower(Coalesce("browser__name", Value(""))),
+        "employee_name": Lower(Coalesce("employee_name", Value(""))),
+        "position__name": Lower(Coalesce("position__name", Value(""))),
+        "provider": Lower(Coalesce("provider", Value(""))),
+        "internet_speed": Lower(Coalesce("internet_speed", Value(""))),
+        "is_certified": Coalesce("is_certified", Value(False)),
+        "replacement_status": Lower(Coalesce("replacement_status", Value(""))),
+        "replacement_score": Coalesce("replacement_score", Value(-1)),
+        "updated_at": F("updated_at"),
+    }
+    expr = sort_map.get(sort, sort_map["inventory_number"])
+    order_expr = expr.desc(nulls_last=True) if direction == "desc" else expr.asc(nulls_last=True)
+    return qs.order_by(order_expr, "id")
 
 
 @login_required
@@ -25,7 +51,7 @@ def dashboard(request):
     ok_count = qs.filter(replacement_status=ReplacementStatus.OK).count()
 
     replacement_chart = {
-        "labels": ["OK", "Внимание", "Замена"],
+        "labels": ["Норма", "Внимание", "Замена"],
         "data": [ok_count, attention_count, replace_count],
         "colors": ["#16a34a", "#d97706", "#dc2626"],
     }
@@ -82,10 +108,18 @@ def pc_list(request):
     allowed_sorts = {
         "inventory_number",
         "organization__name",
-        "employee_name",
+        "os",
         "cpu_model",
+        "cpu_frequency",
         "ram",
         "storage_type",
+        "storage_size",
+        "browser__name",
+        "employee_name",
+        "position__name",
+        "provider",
+        "internet_speed",
+        "is_certified",
         "replacement_status",
         "replacement_score",
         "updated_at",
@@ -94,7 +128,9 @@ def pc_list(request):
     direction = request.GET.get("dir", "asc")
     if sort not in allowed_sorts:
         sort = "inventory_number"
-    qs = qs.order_by(f"-{sort}" if direction == "desc" else sort)
+    if direction not in {"asc", "desc"}:
+        direction = "asc"
+    qs = _apply_sorting(qs, sort, direction)
 
     paginator = Paginator(qs, _PAGE_SIZE)
     page_num = request.GET.get("page")

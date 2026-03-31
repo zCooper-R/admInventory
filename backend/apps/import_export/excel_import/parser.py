@@ -36,6 +36,15 @@ HEADER_ALIASES: dict[str, str] = {
 }
 
 REQUIRED_HEADERS = {"organization_name", "inventory_number", "os", "ram", "storage_type"}
+DEVICE_ROW_KEYS = {
+    "organization_name",
+    "inventory_number",
+    "os",
+    "ram",
+    "storage_type",
+    "employee_name",
+    "position",
+}
 
 
 def _normalize_header(value: Any) -> str:
@@ -54,6 +63,10 @@ def _is_numbering_row(values: list[str]) -> bool:
         return False
     numeric = [v for v in filtered if v.isdigit()]
     return len(filtered) >= 5 and len(numeric) >= max(5, len(filtered) - 1)
+
+
+def _is_device_row(values: dict[str, str]) -> bool:
+    return any(_normalize_cell(values.get(key, "")) for key in DEVICE_ROW_KEYS)
 
 
 def parse_excel(path: str) -> ParseResult:
@@ -85,16 +98,21 @@ def parse_excel(path: str) -> ParseResult:
 
     for excel_row_number, raw_row in enumerate(rows_iter, start=2):
         row_values = [_normalize_cell(v) for v in raw_row]
-        if not any(row_values):
-            continue
-        if _is_numbering_row(row_values):
-            continue
-
-        total_rows += 1
         row_data = {
             field_name: row_values[idx] if idx < len(row_values) else ""
             for field_name, idx in header_idx.items()
         }
+
+        # Skip physical-empty rows and technical tail rows using only known mapped columns.
+        mapped_values = [row_data.get(field_name, "") for field_name in header_idx.keys()]
+        if not any(mapped_values):
+            continue
+        if _is_numbering_row(mapped_values):
+            continue
+        if not _is_device_row(row_data):
+            continue
+
+        total_rows += 1
         parsed_rows.append(ParsedRow(row_number=excel_row_number, values=row_data))
 
     return ParseResult(rows=parsed_rows, total_rows=total_rows)

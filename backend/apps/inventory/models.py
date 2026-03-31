@@ -26,7 +26,7 @@ class InternetSpeed(models.TextChoices):
 
 
 class ReplacementStatus(models.TextChoices):
-    OK = "ok", "OK"
+    OK = "ok", "Норма"
     ATTENTION = "attention", "Требует внимания"
     REPLACE = "replace", "Требует замены"
 
@@ -180,6 +180,22 @@ class SystemSettings(models.Model):
     pc_price_default = models.PositiveIntegerField(default=60_000, verbose_name="Стоимость замены ПК по умолчанию (₽)")
     system_title = models.CharField(max_length=100, default="IT Инвентарь", verbose_name="Название системы")
     system_subtitle = models.CharField(max_length=200, blank=True, default="Учет компьютерной техники", verbose_name="Подзаголовок")
+    replacement_ram_low_threshold_gb = models.PositiveIntegerField(default=8, verbose_name="Порог ОЗУ: низкий (ГБ)")
+    replacement_ram_mid_threshold_gb = models.PositiveIntegerField(default=16, verbose_name="Порог ОЗУ: средний (ГБ)")
+    replacement_ram_high_threshold_gb = models.PositiveIntegerField(default=32, verbose_name="Порог ОЗУ: высокий (ГБ)")
+    replacement_ram_low_score = models.PositiveIntegerField(default=0, verbose_name="Баллы ОЗУ: низкий уровень")
+    replacement_ram_mid_score = models.PositiveIntegerField(default=1, verbose_name="Баллы ОЗУ: средний уровень")
+    replacement_ram_high_score = models.PositiveIntegerField(default=2, verbose_name="Баллы ОЗУ: хороший уровень")
+    replacement_ram_top_score = models.PositiveIntegerField(default=3, verbose_name="Баллы ОЗУ: высокий уровень")
+    replacement_storage_hdd_score = models.PositiveIntegerField(default=0, verbose_name="Баллы диска HDD")
+    replacement_storage_ssd_score = models.PositiveIntegerField(default=2, verbose_name="Баллы диска SSD")
+    replacement_cpu_weak_score = models.PositiveIntegerField(default=0, verbose_name="Баллы процессора: слабый")
+    replacement_cpu_medium_score = models.PositiveIntegerField(default=1, verbose_name="Баллы процессора: средний")
+    replacement_cpu_good_score = models.PositiveIntegerField(default=2, verbose_name="Баллы процессора: хороший")
+    replacement_cpu_excellent_score = models.PositiveIntegerField(default=3, verbose_name="Баллы процессора: отличный")
+    replacement_cpu_unknown_score = models.PositiveIntegerField(default=1, verbose_name="Баллы процессора: нераспознанный")
+    replacement_attention_threshold = models.PositiveIntegerField(default=3, verbose_name="Порог статуса 'внимание'")
+    replacement_ok_threshold = models.PositiveIntegerField(default=6, verbose_name="Порог статуса 'норма'")
 
     class Meta:
         verbose_name = "Настройки системы"

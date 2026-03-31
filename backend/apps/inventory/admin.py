@@ -55,6 +55,35 @@ class SystemSettingsAdmin(admin.ModelAdmin):
         ("Оформление", {"fields": ("system_title", "system_subtitle")}),
         ("Пороговые параметры", {"fields": ("pc_min_ram_gb", "pc_max_age_years")}),
         ("Бюджет", {"fields": ("pc_price_default",)}),
+        (
+            "Логика замены: ОЗУ",
+            {
+                "fields": (
+                    ("replacement_ram_low_threshold_gb", "replacement_ram_low_score"),
+                    ("replacement_ram_mid_threshold_gb", "replacement_ram_mid_score"),
+                    ("replacement_ram_high_threshold_gb", "replacement_ram_high_score"),
+                    ("replacement_ram_top_score",),
+                )
+            },
+        ),
+        (
+            "Логика замены: Накопитель",
+            {"fields": (("replacement_storage_hdd_score", "replacement_storage_ssd_score"),)},
+        ),
+        (
+            "Логика замены: Процессор",
+            {
+                "fields": (
+                    ("replacement_cpu_weak_score", "replacement_cpu_medium_score"),
+                    ("replacement_cpu_good_score", "replacement_cpu_excellent_score"),
+                    ("replacement_cpu_unknown_score",),
+                )
+            },
+        ),
+        (
+            "Логика замены: Пороги статусов",
+            {"fields": (("replacement_attention_threshold", "replacement_ok_threshold"),)},
+        ),
     )
 
     def has_add_permission(self, request):

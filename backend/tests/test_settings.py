@@ -112,12 +112,29 @@ class TestSystemSettingsView:
     def test_post_saves_settings(self, admin_client):
         SystemSettings.get()  # ensure singleton exists
         url = reverse("system-settings")
+        settings_obj = SystemSettings.get()
         response = admin_client.post(url, {
             "system_title":     "Test Title",
             "system_subtitle":  "Test Subtitle",
             "pc_min_ram_gb":    8,
             "pc_max_age_years": 5,
             "pc_price_default": 75000,
+            "replacement_ram_low_threshold_gb": settings_obj.replacement_ram_low_threshold_gb,
+            "replacement_ram_mid_threshold_gb": settings_obj.replacement_ram_mid_threshold_gb,
+            "replacement_ram_high_threshold_gb": settings_obj.replacement_ram_high_threshold_gb,
+            "replacement_ram_low_score": settings_obj.replacement_ram_low_score,
+            "replacement_ram_mid_score": settings_obj.replacement_ram_mid_score,
+            "replacement_ram_high_score": settings_obj.replacement_ram_high_score,
+            "replacement_ram_top_score": settings_obj.replacement_ram_top_score,
+            "replacement_storage_hdd_score": settings_obj.replacement_storage_hdd_score,
+            "replacement_storage_ssd_score": settings_obj.replacement_storage_ssd_score,
+            "replacement_cpu_weak_score": settings_obj.replacement_cpu_weak_score,
+            "replacement_cpu_medium_score": settings_obj.replacement_cpu_medium_score,
+            "replacement_cpu_good_score": settings_obj.replacement_cpu_good_score,
+            "replacement_cpu_excellent_score": settings_obj.replacement_cpu_excellent_score,
+            "replacement_cpu_unknown_score": settings_obj.replacement_cpu_unknown_score,
+            "replacement_attention_threshold": settings_obj.replacement_attention_threshold,
+            "replacement_ok_threshold": settings_obj.replacement_ok_threshold,
         })
         assert response.status_code == 302
 

@@ -1,9 +1,7 @@
-"""
+﻿"""
 System settings view.
 
 Accessible only to superusers and users with ``role=admin``.
-
-Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 from __future__ import annotations
 
@@ -18,16 +16,7 @@ from apps.inventory.models import SystemSettings
 
 @login_required
 def system_settings_view(request):
-    """
-    Singleton system-settings page.
-
-    Displays and saves the :class:`~apps.inventory.models.SystemSettings` record.
-    Also exposes the ``AGENT_API_KEY`` (read-only) so operators can copy it
-    into the agent scripts without opening a server console.
-
-    Access is restricted to superusers and users with ``role=admin``.
-    All other authenticated users are redirected to the dashboard.
-    """
+    """Singleton system settings page."""
     if not (request.user.is_superuser or getattr(request.user, "role", "") == "admin"):
         messages.error(request, "Доступ к настройкам разрешён только администраторам.")
         return redirect("dashboard")
@@ -45,8 +34,12 @@ def system_settings_view(request):
 
     agent_key = getattr(django_settings, "AGENT_API_KEY", "не задан")
 
-    return render(request, "inventory/settings.html", {
-        "nav_active": "settings",
-        "form":       form,
-        "agent_key":  agent_key,
-    })
+    return render(
+        request,
+        "inventory/settings.html",
+        {
+            "nav_active": "settings",
+            "form": form,
+            "agent_key": agent_key,
+        },
+    )

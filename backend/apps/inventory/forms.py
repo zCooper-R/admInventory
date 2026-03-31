@@ -118,11 +118,63 @@ class PCImportForm(forms.Form):
 class SystemSettingsForm(forms.ModelForm):
     class Meta:
         model = SystemSettings
-        fields = ["system_title", "system_subtitle", "pc_min_ram_gb", "pc_max_age_years", "pc_price_default"]
+        fields = [
+            "system_title",
+            "system_subtitle",
+            "pc_min_ram_gb",
+            "pc_max_age_years",
+            "pc_price_default",
+            "replacement_ram_low_threshold_gb",
+            "replacement_ram_mid_threshold_gb",
+            "replacement_ram_high_threshold_gb",
+            "replacement_ram_low_score",
+            "replacement_ram_mid_score",
+            "replacement_ram_high_score",
+            "replacement_ram_top_score",
+            "replacement_storage_hdd_score",
+            "replacement_storage_ssd_score",
+            "replacement_cpu_weak_score",
+            "replacement_cpu_medium_score",
+            "replacement_cpu_good_score",
+            "replacement_cpu_excellent_score",
+            "replacement_cpu_unknown_score",
+            "replacement_attention_threshold",
+            "replacement_ok_threshold",
+        ]
         widgets = {
             "system_title": forms.TextInput(attrs={"class": _FC}),
             "system_subtitle": forms.TextInput(attrs={"class": _FC}),
             "pc_min_ram_gb": forms.NumberInput(attrs={"class": _FC, "min": 1, "max": 256}),
             "pc_max_age_years": forms.NumberInput(attrs={"class": _FC, "min": 1, "max": 30}),
             "pc_price_default": forms.NumberInput(attrs={"class": _FC, "min": 1}),
+            "replacement_ram_low_threshold_gb": forms.NumberInput(attrs={"class": _FC, "min": 1, "max": 1024}),
+            "replacement_ram_mid_threshold_gb": forms.NumberInput(attrs={"class": _FC, "min": 1, "max": 1024}),
+            "replacement_ram_high_threshold_gb": forms.NumberInput(attrs={"class": _FC, "min": 1, "max": 1024}),
+            "replacement_ram_low_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_ram_mid_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_ram_high_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_ram_top_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_storage_hdd_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_storage_ssd_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_cpu_weak_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_cpu_medium_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_cpu_good_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_cpu_excellent_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_cpu_unknown_score": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 100}),
+            "replacement_attention_threshold": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 300}),
+            "replacement_ok_threshold": forms.NumberInput(attrs={"class": _FC, "min": 0, "max": 300}),
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        low = cleaned.get("replacement_ram_low_threshold_gb")
+        mid = cleaned.get("replacement_ram_mid_threshold_gb")
+        high = cleaned.get("replacement_ram_high_threshold_gb")
+        if None not in (low, mid, high) and not (low < mid < high):
+            raise forms.ValidationError("Пороги ОЗУ должны возрастать: низкий < средний < высокий.")
+
+        attention = cleaned.get("replacement_attention_threshold")
+        ok = cleaned.get("replacement_ok_threshold")
+        if None not in (attention, ok) and not (attention < ok):
+            raise forms.ValidationError("Пороги статусов должны быть: внимание < норма.")
+        return cleaned

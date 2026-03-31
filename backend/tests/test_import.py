@@ -207,4 +207,45 @@ class TestExcelImportService:
 
         device = Device.objects.get(inventory_number="INV-REP")
         assert device.replacement_status == ReplacementStatus.REPLACE
-        assert device.replacement_score < 50
+        assert device.replacement_score <= 2
+
+    def test_tail_service_rows_are_skipped(self):
+        wb = Workbook()
+        ws = wb.active
+        ws.append(HEADERS + ["Unnamed: 99"])
+        ws.append([str(i) for i in range(1, len(HEADERS) + 2)])  # numbering row
+        valid = base_row(**{"Инв. №": "INV-TAIL-1"})
+        ws.append([valid.get(h, "") for h in HEADERS] + ["x"])
+        ws.append(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "служебный хвост"])
+        ws.append(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "итого: 1"])
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        log = self._create_import_log(buf.read(), filename="tail.xlsx")
+        process_excel_import(log)
+        log.refresh_from_db()
+
+        assert log.error_count == 0
+        assert Device.objects.filter(inventory_number="INV-TAIL-1").exists()
+        assert log.total_rows == 1
+
+    def test_unnamed_columns_are_ignored_for_row_detection(self):
+        wb = Workbook()
+        ws = wb.active
+        ws.append(HEADERS + ["Unnamed: 1", "Unnamed: 2"])
+        ws.append([str(i) for i in range(1, len(HEADERS) + 3)])
+        ws.append([""] * len(HEADERS) + ["служебно", "текст"])
+        valid = base_row(**{"Инв. №": "INV-UNNAMED"})
+        ws.append([valid.get(h, "") for h in HEADERS] + ["", ""])
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        log = self._create_import_log(buf.read(), filename="unnamed.xlsx")
+        process_excel_import(log)
+        log.refresh_from_db()
+
+        assert log.error_count == 0
+        assert log.total_rows == 1
+        assert Device.objects.filter(inventory_number="INV-UNNAMED").exists()
