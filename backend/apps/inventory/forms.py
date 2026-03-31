@@ -5,9 +5,20 @@ from apps.locations.models import Organization
 
 _FC = "form-control"
 _FS = "form-select"
+_FCHK = "form-check-input"
 
 
 class PCForm(forms.ModelForm):
+    has_google_account = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    has_apple_account = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    has_microsoft_account = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    is_certified = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_text = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_images = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_presentations = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_audio = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+    use_for_video = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={"class": _FCHK}))
+
     class Meta:
         model = Device
         fields = [
@@ -61,10 +72,30 @@ class PCForm(forms.ModelForm):
         self.fields["browser"].queryset = Browser.objects.order_by("name")
         self.fields["position"].required = False
         self.fields["browser"].required = False
+        self.fields["position"].empty_label = "— Не указана —"
+        self.fields["browser"].empty_label = "— Не указан —"
+
+        for field_name in self.errors:
+            field = self.fields.get(field_name)
+            if not field:
+                continue
+            css_class = field.widget.attrs.get("class", "")
+            if "is-invalid" not in css_class:
+                field.widget.attrs["class"] = (css_class + " is-invalid").strip()
 
 
 class PCFilterForm(forms.Form):
-    search = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": _FC, "placeholder": "Инв.№ / сотрудник / организация"}))
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": _FC,
+                "placeholder": "Инв.№ / сотрудник / организация",
+                "autocomplete": "off",
+                "id": "id_search",
+            }
+        ),
+    )
     organization = forms.ModelChoiceField(required=False, queryset=Organization.objects.order_by("name"), empty_label="Все организации", widget=forms.Select(attrs={"class": _FS}))
     position = forms.ModelChoiceField(required=False, queryset=Position.objects.order_by("name"), empty_label="Все должности", widget=forms.Select(attrs={"class": _FS}))
     browser = forms.ModelChoiceField(required=False, queryset=Browser.objects.order_by("name"), empty_label="Все браузеры", widget=forms.Select(attrs={"class": _FS}))

@@ -30,6 +30,7 @@
 <body>
 
 <div class="d-flex" id="wrapper">
+  {% critical_pc_count as crit_init %}
 
   <!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
   <nav id="sidebar">
@@ -131,7 +132,6 @@
               style="display:none;"></span>
 
         <!-- Critical PC alert (initial render; HTMX refreshes both badges via OOB) -->
-        {% critical_pc_count as crit_init %}
         <span id="topbar-critical-badge">
           {% if crit_init %}
           <a href="{% url 'budget-report' %}"

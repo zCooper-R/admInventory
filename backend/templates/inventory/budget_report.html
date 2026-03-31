@@ -1,56 +1,124 @@
 ﻿{% extends 'base.html' %}
+{% load inventory_tags %}
 
-{% block title %}Отчёт по замене{% endblock %}
+{% block title %}Бюджет замен — IT Инвентарь{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Бюджет / Замены</li>
+{% endblock %}
 
 {% block content %}
-<div class="card card-body mb-3">
-  <h1 class="h4">Отчёт по замене устройств</h1>
-  <p>Всего: {{ report.total_pcs }} | Замена: {{ report.replacement_count }} | Внимание: {{ report.attention_count }} | OK: {{ report.ok_count }}</p>
-  <p>Оценочный бюджет: {{ report.total_cost }}</p>
-</div>
-
-<div class="card card-body mb-3">
-  <h2 class="h5">По организациям</h2>
-  <div class="table-responsive">
-    <table class="table table-sm">
-      <thead><tr><th>Организация</th><th>Всего</th><th>Замена</th><th>Внимание</th><th>OK</th><th>Бюджет</th></tr></thead>
-      <tbody>
-      {% for org in report.by_organization %}
-        <tr>
-          <td>{{ org.organization_name }}</td>
-          <td>{{ org.total_devices }}</td>
-          <td>{{ org.to_replace }}</td>
-          <td>{{ org.attention }}</td>
-          <td>{{ org.ok }}</td>
-          <td>{{ org.estimated_cost }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="6" class="text-muted">Нет данных</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Бюджет / Плановые замены</h1>
+    <p class="page-subtitle">Расчёт по replacement_status и новой модели устройств</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer me-1"></i>Печать</button>
+    <a href="{% url 'pc-export' %}" class="btn btn-outline-success"><i class="bi bi-download me-1"></i>Выгрузить Excel</a>
   </div>
 </div>
 
-<div class="card card-body">
-  <h2 class="h5">Устройства</h2>
-  <div class="table-responsive">
-    <table class="table table-sm">
-      <thead><tr><th>Инв.№</th><th>Организация</th><th>Сотрудник</th><th>RAM</th><th>Диск</th><th>Статус</th><th>Причина</th></tr></thead>
-      <tbody>
-      {% for d in report.devices %}
-        <tr>
-          <td>{{ d.inventory_number }}</td>
-          <td>{{ d.organization.name }}</td>
-          <td>{{ d.employee_name|default:"—" }}</td>
-          <td>{{ d.ram|default:"—" }}</td>
-          <td>{{ d.storage_type }}</td>
-          <td>{{ d.get_replacement_status_display }} ({{ d.replacement_score }})</td>
-          <td>{{ d.replacement_reason|default:"—" }}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+<div class="row g-4 mb-4">
+  <div class="col-sm-6 col-xl-3"><div class="card stat-card border-0"><div class="card-body"><div class="d-flex align-items-center gap-3 mb-3"><div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-pc-display"></i></div><div><div class="stat-value text-primary">{{ report.total_pcs }}</div><div class="stat-label">Всего</div></div></div><div class="small text-muted">Устройств в отчёте</div></div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="card stat-card border-0"><div class="card-body"><div class="d-flex align-items-center gap-3 mb-3"><div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-octagon"></i></div><div><div class="stat-value text-danger">{{ report.replacement_count }}</div><div class="stat-label">К замене</div></div></div><div class="small text-muted">replacement_status=replace</div></div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="card stat-card border-0"><div class="card-body"><div class="d-flex align-items-center gap-3 mb-3"><div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-arrow-repeat"></i></div><div><div class="stat-value text-warning">{{ report.attention_count }}</div><div class="stat-label">Внимание</div></div></div><div class="small text-muted">Пограничные устройства</div></div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="card stat-card border-0"><div class="card-body"><div class="d-flex align-items-center gap-3 mb-3"><div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-cash-coin"></i></div><div><div class="stat-value text-info" id="kpi-total-cost" style="font-size:1.35rem;">{{ report.total_cost|rubles }}</div><div class="stat-label">Стоимость</div></div></div><div class="small text-muted"><span id="kpi-price-label">{{ price_per_pc|rubles }}</span> × {{ report.replacement_count }} ед.</div></div></div></div>
+</div>
+
+<div class="card mb-4" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+  <div class="card-body p-4">
+    <div class="row align-items-center g-3">
+      <div class="col-auto"><i class="bi bi-calculator fs-4 text-primary"></i></div>
+      <div class="col"><h6 class="mb-1 fw-semibold">Калькулятор бюджета</h6><p class="mb-0 text-muted small">Цена за единицу пересчитывает итог и суммы по организациям.</p></div>
+      <div class="col-md-4">
+        <div class="input-group"><span class="input-group-text"><i class="bi bi-currency-exchange"></i></span><input type="number" id="priceInput" class="form-control form-control-lg fw-bold" value="{{ price_per_pc }}" min="1" step="1000"><span class="input-group-text">₽/шт.</span></div>
+      </div>
+    </div>
+    <div class="alert alert-info border-0 mt-3 mb-0 d-flex align-items-center gap-3" style="border-radius:10px;"><i class="bi bi-info-circle-fill fs-5"></i><div>Итого к замене: <strong>{{ report.replacement_count }}</strong> × <strong id="calc-price">{{ price_per_pc|rubles }}</strong> = <strong id="calc-total" class="text-primary fs-5">{{ report.total_cost|rubles }}</strong></div></div>
   </div>
 </div>
+
+<div class="card mb-4" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+  <div class="card-header bg-white" style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-building me-2 text-primary"></i>По организациям</h6></div>
+  <div class="card-body p-0">
+    <div class="table-responsive budget-table-wrap">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr class="table-header-row"><th class="ps-4">Организация</th><th class="text-center">Всего</th><th class="text-center">К замене</th><th class="text-center">Внимание</th><th class="text-center">OK</th><th class="text-end pe-4">Стоимость</th></tr></thead>
+        <tbody>
+          {% for org in report.by_organization %}
+          <tr>
+            <td class="ps-4 fw-medium">{{ org.organization_name }}</td>
+            <td class="text-center">{{ org.total_devices }}</td>
+            <td class="text-center"><span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-3">{{ org.to_replace }}</span></td>
+            <td class="text-center"><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3">{{ org.attention }}</span></td>
+            <td class="text-center"><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3">{{ org.ok }}</span></td>
+            <td class="text-end pe-4 fw-semibold" data-replace-count="{{ org.to_replace }}" data-org-cost>{{ org.estimated_cost|rubles }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-5">Нет данных</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light"><tr class="fw-semibold"><td class="ps-4">Итого</td><td class="text-center">{{ report.total_pcs }}</td><td class="text-center">{{ report.replacement_count }}</td><td class="text-center">{{ report.attention_count }}</td><td class="text-center">{{ report.ok_count }}</td><td class="text-end pe-4 text-primary" id="tfoot-total">{{ report.total_cost|rubles }}</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+  <div class="card-header bg-white" style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-list-check me-2 text-primary"></i>Устройства</h6></div>
+  <div class="card-body p-0">
+    <div class="table-responsive budget-table-wrap">
+      <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
+        <thead><tr class="table-header-row"><th class="ps-4">Инв. номер</th><th>Организация</th><th>Сотрудник</th><th>ОЗУ</th><th>Накопитель</th><th>Статус</th><th class="pe-4">Причины</th></tr></thead>
+        <tbody>
+          {% for d in report.devices %}
+          <tr class="{% if d.replacement_status == 'replace' %}table-danger-subtle{% elif d.replacement_status == 'attention' %}table-warning-subtle{% endif %}">
+            <td class="ps-4 fw-semibold">{{ d.inventory_number|default:'—' }}</td>
+            <td>{{ d.organization.name }}</td>
+            <td class="text-muted small">{{ d.employee_name|default:'—' }}</td>
+            <td>{% if d.ram %}<span class="{% if d.ram < 8 %}text-danger fw-semibold{% else %}text-muted{% endif %}">{{ d.ram }} ГБ</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td class="text-muted small">{{ d.storage_type }}{% if d.storage_size %} {{ d.storage_size }}G{% endif %}</td>
+            <td><span class="badge {% if d.replacement_status == 'replace' %}bg-danger{% elif d.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ d.get_replacement_status_display }}</span></td>
+            <td class="pe-4"><span class="small text-muted">{{ d.replacement_reason|default:'—' }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const REPLACE_COUNT = {{ report.replacement_count }};
+  const orgRows = document.querySelectorAll('[data-org-cost]');
+  function fmt(n) { return n.toLocaleString('ru-RU') + '\u00a0₽'; }
+  function update(price) {
+    const total = price * REPLACE_COUNT;
+    document.getElementById('kpi-total-cost').textContent = fmt(total);
+    document.getElementById('kpi-price-label').textContent = fmt(price);
+    document.getElementById('calc-price').textContent = fmt(price);
+    document.getElementById('calc-total').textContent = fmt(total);
+    document.getElementById('tfoot-total').textContent = fmt(total);
+    orgRows.forEach(td => {
+      const count = parseInt(td.dataset.replaceCount, 10) || 0;
+      td.textContent = fmt(count * price);
+    });
+  }
+  const input = document.getElementById('priceInput');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const v = parseInt(input.value, 10);
+    if (v > 0) {
+      update(v);
+      const url = new URL(window.location);
+      url.searchParams.set('price', v);
+      history.replaceState(null, '', url.toString());
+    }
+  });
+}());
+</script>
 {% endblock %}

@@ -83,6 +83,7 @@ def pc_list(request):
         "inventory_number",
         "organization__name",
         "employee_name",
+        "cpu_model",
         "ram",
         "storage_type",
         "replacement_status",

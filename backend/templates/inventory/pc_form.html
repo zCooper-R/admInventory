@@ -3,23 +3,92 @@
 {% block title %}{{ title }} — IT Инвентарь{% endblock %}
 
 {% block content %}
-<div class="card card-body">
-  <h1 class="h4 mb-3">{{ title }}</h1>
-  <form method="post">
-    {% csrf_token %}
-    <div class="row g-3">
-      {% for field in form %}
-        <div class="col-md-4">
-          <label class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
-          {{ field }}
-          {% if field.errors %}<div class="text-danger small">{{ field.errors|join:", " }}</div>{% endif %}
-        </div>
-      {% endfor %}
-    </div>
-    <div class="mt-3 d-flex gap-2">
-      <button class="btn btn-primary" type="submit">Сохранить</button>
-      <a class="btn btn-outline-secondary" href="{% url 'pc-list' %}">Отмена</a>
-    </div>
-  </form>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-subtitle">{% if is_create %}Заполните данные устройства{% else %}Редактирование: <code>{{ pc.inventory_number }}</code>{% endif %}</p>
+  </div>
+  <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Назад к списку</a>
 </div>
+
+<form method="post" novalidate class="needs-validation">
+  {% csrf_token %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card form-section-card mb-4">
+        <div class="card-body p-4">
+          <h6 class="section-title"><i class="bi bi-tag me-2 text-primary"></i>Идентификация и ответственный</h6>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.inventory_number.label }} <span class="text-danger">*</span></label>{{ form.inventory_number }}{% if form.inventory_number.errors %}<div class="text-danger small mt-1">{{ form.inventory_number.errors|join:', ' }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.organization.label }} <span class="text-danger">*</span></label>{{ form.organization }}{% if form.organization.errors %}<div class="text-danger small mt-1">{{ form.organization.errors|join:', ' }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.employee_name.label }}</label>{{ form.employee_name }}</div>
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.position.label }}</label>{{ form.position }}</div>
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.browser.label }}</label>{{ form.browser }}</div>
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.serial_number.label }}</label>{{ form.serial_number }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card form-section-card mb-4">
+        <div class="card-body p-4">
+          <h6 class="section-title"><i class="bi bi-cpu me-2 text-success"></i>Характеристики</h6>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.os.label }} <span class="text-danger">*</span></label>{{ form.os }}</div>
+            <div class="col-md-6"><label class="form-label fw-medium">{{ form.cpu_model.label }}</label>{{ form.cpu_model }}</div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.cpu_frequency.label }}</label><div class="input-group">{{ form.cpu_frequency }}<span class="input-group-text">ГГц</span></div></div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.ram.label }} <span class="text-danger">*</span></label><div class="input-group">{{ form.ram }}<span class="input-group-text">ГБ</span></div></div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.storage_type.label }} <span class="text-danger">*</span></label>{{ form.storage_type }}</div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.storage_size.label }}</label><div class="input-group">{{ form.storage_size }}<span class="input-group-text">ГБ</span></div></div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.internet_speed.label }}</label>{{ form.internet_speed }}</div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.provider.label }}</label>{{ form.provider }}</div>
+            <div class="col-md-4"><label class="form-label fw-medium">{{ form.purchase_date.label }}</label>{{ form.purchase_date }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card form-section-card">
+        <div class="card-body p-4">
+          <h6 class="section-title"><i class="bi bi-check2-square me-2 text-warning"></i>Аккаунты и сценарии использования</h6>
+          <div class="row g-2">
+            <div class="col-md-4"><div class="form-check">{{ form.has_google_account }} <label class="form-check-label" for="{{ form.has_google_account.id_for_label }}">{{ form.has_google_account.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.has_apple_account }} <label class="form-check-label" for="{{ form.has_apple_account.id_for_label }}">{{ form.has_apple_account.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.has_microsoft_account }} <label class="form-check-label" for="{{ form.has_microsoft_account.id_for_label }}">{{ form.has_microsoft_account.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.is_certified }} <label class="form-check-label" for="{{ form.is_certified.id_for_label }}">{{ form.is_certified.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.use_for_text }} <label class="form-check-label" for="{{ form.use_for_text.id_for_label }}">{{ form.use_for_text.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.use_for_images }} <label class="form-check-label" for="{{ form.use_for_images.id_for_label }}">{{ form.use_for_images.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.use_for_presentations }} <label class="form-check-label" for="{{ form.use_for_presentations.id_for_label }}">{{ form.use_for_presentations.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.use_for_audio }} <label class="form-check-label" for="{{ form.use_for_audio.id_for_label }}">{{ form.use_for_audio.label }}</label></div></div>
+            <div class="col-md-4"><div class="form-check">{{ form.use_for_video }} <label class="form-check-label" for="{{ form.use_for_video.id_for_label }}">{{ form.use_for_video.label }}</label></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card form-section-card mb-4">
+        <div class="card-body p-4">
+          <h6 class="section-title"><i class="bi bi-activity me-2 text-danger"></i>Оценка замены</h6>
+          {% if pc %}
+          <div class="mb-2"><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></div>
+          <div class="small text-muted mb-2">Скоринг: <strong>{{ pc.replacement_score }}</strong></div>
+          <div class="small">{{ pc.replacement_reason|default:'Оценка будет рассчитана автоматически.' }}</div>
+          {% else %}
+          <p class="text-muted small mb-0">После сохранения система автоматически рассчитает replacement_status, score и причины.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card form-section-card">
+        <div class="card-body p-4">
+          <button type="submit" class="btn btn-primary w-100 mb-2"><i class="bi bi-check-lg me-1"></i>{% if is_create %}Создать устройство{% else %}Сохранить изменения{% endif %}</button>
+          <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary w-100">Отмена</a>
+          {% if not is_create %}
+          <hr class="my-3">
+          <a href="{% url 'pc-delete' pc.pk %}" class="btn btn-outline-danger w-100"><i class="bi bi-trash me-1"></i>Удалить устройство</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
 {% endblock %}

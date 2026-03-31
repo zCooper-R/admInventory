@@ -1,41 +1,77 @@
-﻿<div class="table-responsive card card-body">
-  <table class="table table-sm align-middle">
-    <thead>
-      <tr>
-        <th>Инв. №</th>
-        <th>Организация</th>
-        <th>Сотрудник</th>
-        <th>Должность</th>
-        <th>ОС</th>
-        <th>RAM</th>
-        <th>Диск</th>
-        <th>Статус замены</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for pc in pcs %}
-        <tr>
-          <td>{{ pc.inventory_number|default:"—" }}</td>
-          <td>{{ pc.organization.name }}</td>
-          <td>{{ pc.employee_name|default:"—" }}</td>
-          <td>{{ pc.position.name|default:"—" }}</td>
-          <td>{{ pc.os|default:"—" }}</td>
-          <td>{{ pc.ram|default:"—" }}</td>
-          <td>{{ pc.storage_type }}</td>
-          <td>
-            <span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">
-              {{ pc.get_replacement_status_display }} ({{ pc.replacement_score }})
-            </span>
-          </td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary" hx-get="{% url 'pc-edit-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML">Изм.</button>
-            <button class="btn btn-sm btn-outline-danger" hx-get="{% url 'pc-delete-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML">Удал.</button>
-          </td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="9" class="text-center text-muted">Нет данных</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+﻿{% load inventory_tags %}
+
+<span id="result-count" hx-swap-oob="true">Найдено: <strong>{{ total_count }}</strong> записей</span>
+
+<div class="card table-card">
+  <div class="card-body p-0">
+    <div class="table-responsive pc-mobile-card-table">
+      <table class="table table-striped table-hover align-middle mb-0">
+        <thead>
+          <tr class="table-header-row">
+            <th class="ps-3" style="width:155px;">
+              <a class="sort-link" hx-get="{% sort_url 'inventory_number' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Инв. номер{% if sort == 'inventory_number' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a>
+            </th>
+            <th>
+              <a class="sort-link" hx-get="{% sort_url 'organization__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Организация{% if sort == 'organization__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a>
+            </th>
+            <th class="d-none d-lg-table-cell" style="min-width:150px;"><a class="sort-link" hx-get="{% sort_url 'cpu_model' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Процессор{% if sort == 'cpu_model' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
+            <th class="d-none d-md-table-cell" style="width:85px;"><a class="sort-link" hx-get="{% sort_url 'ram' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">ОЗУ{% if sort == 'ram' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
+            <th class="d-none d-lg-table-cell" style="width:110px;">Диск</th>
+            <th><a class="sort-link" hx-get="{% sort_url 'replacement_status' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Статус замены{% if sort == 'replacement_status' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
+            <th>Сотрудник</th>
+            <th class="d-none d-xl-table-cell">Должность</th>
+            <th class="pe-3 text-end" style="width:90px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pc in pcs %}
+          <tr id="pc-row-{{ pc.pk }}">
+            <td class="ps-3 col-inv">
+              <div class="fw-semibold text-primary small">{{ pc.inventory_number|default:'—' }}</div>
+              <div class="d-md-none mt-1">
+                <span class="fw-medium">{{ pc.organization.name }}</span>
+                <span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %} ms-2">{{ pc.get_replacement_status_display }}</span>
+              </div>
+              <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">{% if pc.employee_name %}<i class="bi bi-person me-1"></i>{{ pc.employee_name }}{% else %}—{% endif %}</div>
+              <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">{% if pc.cpu_model %}<span>{{ pc.cpu_model|truncatechars:26 }}</span>{% endif %}{% if pc.ram %} · {{ pc.ram }} ГБ{% endif %}{% if pc.storage_type %} · {{ pc.storage_type }}{% if pc.storage_size %} {{ pc.storage_size }}G{% endif %}{% endif %}</div>
+            </td>
+            <td class="col-name d-none d-md-table-cell">{{ pc.organization.name }}</td>
+            <td class="col-cpu text-muted small d-none d-lg-table-cell">{{ pc.cpu_model|default:'—'|truncatechars:26 }}</td>
+            <td class="col-ram d-none d-md-table-cell">{% if pc.ram %}{% if pc.ram < 8 %}<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ pc.ram }} ГБ ⚠</span>{% else %}<span class="badge bg-light text-dark border">{{ pc.ram }} ГБ</span>{% endif %}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td class="col-disk text-muted small d-none d-lg-table-cell">{{ pc.storage_type|default:'—' }}{% if pc.storage_size %} {{ pc.storage_size }}G{% endif %}</td>
+            <td class="col-status d-none d-md-table-cell"><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span>{% if pc.replacement_score %}<div class="small text-muted mt-1">score: {{ pc.replacement_score }}</div>{% endif %}</td>
+            <td class="col-loc text-muted small d-none d-md-table-cell">{{ pc.employee_name|default:'—' }}</td>
+            <td class="col-user text-muted small d-none d-xl-table-cell">{{ pc.position.name|default:'—' }}</td>
+            <td class="col-actions pe-3 text-end">
+              <div class="d-flex justify-content-end gap-1">
+                <button class="btn btn-sm btn-outline-primary action-btn" title="Редактировать" hx-get="{% url 'pc-edit-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-outline-danger action-btn" title="Удалить" hx-get="{% url 'pc-delete-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML"><i class="bi bi-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center py-5"><i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i><span class="text-muted">Устройства не найдены</span></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if pcs.has_other_pages %}
+  <div class="card-footer border-top py-3 px-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <small class="text-muted">Стр. {{ pcs.number }} / {{ pcs.paginator.num_pages }} ({{ total_count }} записей)</small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0 gap-1">
+          {% if pcs.has_previous %}<li class="page-item"><a class="page-link rounded" hx-get="{% query_url page=pcs.previous_page_number %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm"><i class="bi bi-chevron-left"></i></a></li>{% endif %}
+          {% for num in pcs.paginator.page_range %}
+            {% if pcs.number == num %}<li class="page-item active"><span class="page-link rounded">{{ num }}</span></li>
+            {% elif num > pcs.number|add:'-3' and num < pcs.number|add:'3' %}<li class="page-item"><a class="page-link rounded" hx-get="{% query_url page=num %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if pcs.has_next %}<li class="page-item"><a class="page-link rounded" hx-get="{% query_url page=pcs.next_page_number %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm"><i class="bi bi-chevron-right"></i></a></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+  {% endif %}
 </div>

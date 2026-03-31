@@ -1,4 +1,5 @@
 ﻿{% extends 'base.html' %}
+{% load inventory_tags %}
 
 {% block title %}Устройства — IT Инвентарь{% endblock %}
 
@@ -10,7 +11,7 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Устройства</h1>
-    <p class="page-subtitle">Всего: {{ total_count }}</p>
+    <p class="page-subtitle" id="result-count">Найдено: <strong>{{ total_count }}</strong> записей</p>
   </div>
   <div class="d-flex gap-2 flex-wrap">
     <button class="btn btn-primary" hx-get="{% url 'pc-create-modal' %}" hx-target="#modal-container" hx-swap="innerHTML">
@@ -22,24 +23,28 @@
 </div>
 
 <div class="filter-bar mb-4">
-  <form id="filterForm" hx-get="{% url 'pc-list' %}" hx-target="#pc-table-wrapper" hx-swap="innerHTML" hx-push-url="true">
+  <form id="filterForm" hx-get="{% url 'pc-list' %}" hx-target="#pc-table-wrapper" hx-swap="innerHTML" hx-push-url="true" hx-trigger="change delay:200ms, keyup delay:500ms from:#id_search" hx-indicator="#table-spinner">
     <div class="row g-2 align-items-end">
-      <div class="col-12 col-md-4">{{ form.search }}</div>
-      <div class="col-6 col-md-2">{{ form.organization }}</div>
-      <div class="col-6 col-md-2">{{ form.position }}</div>
-      <div class="col-6 col-md-2">{{ form.browser }}</div>
-      <div class="col-6 col-md-2">{{ form.replacement_status }}</div>
-      <div class="col-6 col-md-2">{{ form.storage_type }}</div>
-      <div class="col-6 col-md-2">{{ form.internet_speed }}</div>
+      <div class="col-12 col-md-4"><label class="form-label small fw-semibold text-muted mb-1">Поиск</label>{{ form.search }}</div>
+      <div class="col-6 col-md-2"><label class="form-label small fw-semibold text-muted mb-1">Организация</label>{{ form.organization }}</div>
+      <div class="col-6 col-md-2"><label class="form-label small fw-semibold text-muted mb-1">Должность</label>{{ form.position }}</div>
+      <div class="col-6 col-md-2"><label class="form-label small fw-semibold text-muted mb-1">Браузер</label>{{ form.browser }}</div>
+      <div class="col-6 col-md-2"><label class="form-label small fw-semibold text-muted mb-1">Replacement</label>{{ form.replacement_status }}</div>
+      <div class="col-6 col-md-2"><label class="form-label small fw-semibold text-muted mb-1">Тип диска</label>{{ form.storage_type }}</div>
+      <div class="col-6 col-md-2"><label class="form-label small fw-semibold text-muted mb-1">Интернет</label>{{ form.internet_speed }}</div>
       <div class="col-12 col-md-2 d-flex gap-2">
-        <button type="submit" class="btn btn-primary flex-grow-1">Фильтр</button>
-        <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary">Сброс</a>
+        <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search"></i></button>
+        <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary" title="Сбросить"><i class="bi bi-x-lg"></i></a>
       </div>
     </div>
   </form>
 </div>
 
 <div id="pc-table-wrapper">
+  <div id="table-spinner" class="htmx-indicator text-center py-5">
+    <div class="spinner-border text-primary" role="status" style="width:2rem;height:2rem;"><span class="visually-hidden">Загрузка...</span></div>
+    <p class="text-muted mt-2 mb-0">Загрузка данных...</p>
+  </div>
   {% include 'inventory/_partials/pc_table.html' %}
 </div>
 {% endblock %}

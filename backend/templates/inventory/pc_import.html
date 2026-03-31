@@ -1,40 +1,109 @@
 ﻿{% extends 'base.html' %}
 
-{% block title %}Импорт Excel{% endblock %}
+{% block title %}Импорт Excel — IT Инвентарь{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Импорт Excel</li>
+{% endblock %}
 
 {% block content %}
-<div class="card card-body mb-3">
-  <h1 class="h4">Импорт устройств из Excel</h1>
-  <p>Поддерживается только новый целевой формат. Обязательные поля строки: организация, Инв. №, ОС, RAM, тип диска.</p>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="mb-3">{{ form.file }}</div>
-    <button type="submit" class="btn btn-primary">Импортировать</button>
-    <a class="btn btn-outline-secondary" href="{% url 'pc-import-template' %}">Скачать шаблон</a>
-  </form>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Импорт Excel</h1>
+    <p class="page-subtitle">Целевой импорт устройств из нового формата файла</p>
+  </div>
+  <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>К списку</a>
 </div>
 
-<div class="card card-body">
-  <h2 class="h5">Последние импорты</h2>
-  <div class="table-responsive">
-    <table class="table table-sm">
-      <thead><tr><th>ID</th><th>Файл</th><th>Статус</th><th>Создано</th><th>Обновлено</th><th>Ошибок</th><th>Дата</th></tr></thead>
-      <tbody>
-      {% for log in recent_logs %}
-        <tr>
-          <td>{{ log.id }}</td>
-          <td>{{ log.file.name }}</td>
-          <td>{{ log.get_status_display }}</td>
-          <td>{{ log.created_count }}</td>
-          <td>{{ log.updated_count }}</td>
-          <td>{{ log.error_count }}</td>
-          <td>{{ log.created_at }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="7" class="text-muted">Нет данных</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card form-section-card mb-4">
+      <div class="card-body p-4">
+        <h6 class="section-title"><i class="bi bi-upload me-2 text-primary"></i>Загрузить файл</h6>
+
+        <div class="import-drop-area text-center p-4 mb-4 rounded-3" id="dropArea">
+          <i class="bi bi-file-earmark-excel fs-1 text-success d-block mb-2"></i>
+          <p class="fw-medium mb-1">Перетащите файл сюда</p>
+          <p class="text-muted small mb-0">или выберите через кнопку</p>
+          <p class="text-muted small">Поддерживаются: <code>.xlsx</code>, <code>.xls</code></p>
+          <div id="fileLabel" class="small fw-semibold text-primary"></div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="mb-2">
+            <label class="form-label fw-medium">{{ form.file.label }}</label>
+            {{ form.file }}
+            {% if form.file.help_text %}<div class="form-text">{{ form.file.help_text }}</div>{% endif %}
+            {% if form.file.errors %}<div class="text-danger small mt-1">{{ form.file.errors|join:", " }}</div>{% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary w-100 mt-2"><i class="bi bi-cloud-upload me-2"></i>Загрузить и импортировать</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card form-section-card">
+      <div class="card-body p-4">
+        <h6 class="section-title"><i class="bi bi-table me-2 text-primary"></i>Формат файла</h6>
+        <p class="text-muted small mb-3">Обязательные колонки в строке импорта:</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-2 small">
+            <thead class="table-light"><tr><th>Колонка</th><th class="text-center">Обяз.</th><th>Пример</th></tr></thead>
+            <tbody>
+              <tr><td><code>Организация</code></td><td class="text-center">✅</td><td>МКУ ГИМК</td></tr>
+              <tr><td><code>Инв. №</code></td><td class="text-center">✅</td><td>INV-2024-001</td></tr>
+              <tr><td><code>Наименование ОС</code></td><td class="text-center">✅</td><td>Windows 11 Pro</td></tr>
+              <tr><td><code>Оперативная память</code></td><td class="text-center">✅</td><td>16</td></tr>
+              <tr><td><code>Тип диска</code></td><td class="text-center">✅</td><td>SSD</td></tr>
+              <tr><td><code>Фамилия, инициалы сотрудника</code></td><td class="text-center">—</td><td>Иванов И.И.</td></tr>
+              <tr><td><code>Должность</code></td><td class="text-center">—</td><td>Главный специалист</td></tr>
+              <tr><td><code>Браузер</code></td><td class="text-center">—</td><td>Yandex Browser</td></tr>
+              <tr><td><code>Провайдер</code></td><td class="text-center">—</td><td>Ростелеком</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i>При совпадении <strong>Инв. №</strong> устройство обновляется, а не дублируется.</p>
+        <a href="{% url 'pc-import-template' %}" class="btn btn-outline-success w-100"><i class="bi bi-file-earmark-arrow-down me-2"></i>Скачать шаблон</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card table-card h-100">
+      <div class="card-header" style="border-radius:12px 12px 0 0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-primary"></i>История импортов</h6></div>
+      {% if recent_logs %}
+      <div class="list-group list-group-flush">
+        {% for log in recent_logs %}
+        <div class="list-group-item border-0 px-4 py-3">
+          <div class="d-flex align-items-start justify-content-between mb-2">
+            <div>
+              <span class="fw-medium small"><i class="bi bi-file-earmark-excel me-1 text-success"></i>{{ log.file.name|default:"файл" }}</span>
+              <div class="text-muted small">{{ log.created_at|date:"d.m.Y в H:i" }}{% if log.uploaded_by %} · <i class="bi bi-person me-1"></i>{{ log.uploaded_by }}{% endif %}</div>
+            </div>
+            <span class="badge rounded-pill ms-2 {% if log.status == 'success' %}bg-success{% elif log.status == 'partial' %}bg-warning text-dark{% elif log.status == 'failed' %}bg-danger{% elif log.status == 'processing' %}bg-info{% else %}bg-secondary{% endif %}">{{ log.get_status_display }}</span>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3 small">
+            <span class="text-muted"><i class="bi bi-list-ol me-1"></i>{{ log.total_rows }} строк</span>
+            <span class="text-success"><i class="bi bi-plus-circle me-1"></i>{{ log.created_count }} создано</span>
+            <span class="text-primary"><i class="bi bi-arrow-repeat me-1"></i>{{ log.updated_count }} обновлено</span>
+            {% if log.error_count %}<span class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ log.error_count }} ошибок</span>{% endif %}
+          </div>
+
+          {% if log.errors %}
+          <div class="mt-2 p-2 rounded border border-danger-subtle bg-danger-subtle">
+            {% for err in log.errors|slice:":3" %}<div class="text-danger small"><i class="bi bi-exclamation-circle me-1"></i>Строка {{ err.row }}: {{ err.message }}</div>{% endfor %}
+            {% if log.errors|length > 3 %}<div class="text-muted small mt-1">... и ещё {{ log.errors|length|add:"-3" }} ошибок</div>{% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% if not forloop.last %}<hr class="my-0 mx-4">{% endif %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="card-body d-flex align-items-center justify-content-center" style="min-height:200px;"><div class="text-center text-muted"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i><p class="mb-0">История импортов пуста</p></div></div>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
