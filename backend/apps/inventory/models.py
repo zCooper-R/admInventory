@@ -202,6 +202,7 @@ class SystemSettings(models.Model):
 
     class Meta:
         verbose_name = "Настройки системы"
+        verbose_name_plural = "Настройки системы"
 
     def __str__(self) -> str:
         return "Настройки системы"
