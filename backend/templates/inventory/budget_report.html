@@ -1,375 +1,56 @@
-{% extends 'base.html' %}
-{% load inventory_tags %}
+﻿{% extends 'base.html' %}
 
-{% block title %}Бюджет замен — IT Инвентарь{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item active">Бюджет / Замены</li>
-{% endblock %}
+{% block title %}Отчёт по замене{% endblock %}
 
 {% block content %}
+<div class="card card-body mb-3">
+  <h1 class="h4">Отчёт по замене устройств</h1>
+  <p>Всего: {{ report.total_pcs }} | Замена: {{ report.replacement_count }} | Внимание: {{ report.attention_count }} | OK: {{ report.ok_count }}</p>
+  <p>Оценочный бюджет: {{ report.total_cost }}</p>
+</div>
 
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Бюджет / Плановые замены</h1>
-    <p class="page-subtitle">
-      Анализ состояния парка и оценка стоимости обновления
-    </p>
-  </div>
-  <div class="d-flex gap-2">
-    <button onclick="window.print()" class="btn btn-outline-secondary">
-      <i class="bi bi-printer me-1"></i>Печать
-    </button>
-    <a href="{% url 'pc-export' %}" class="btn btn-outline-success">
-      <i class="bi bi-download me-1"></i>Выгрузить Excel
-    </a>
+<div class="card card-body mb-3">
+  <h2 class="h5">По организациям</h2>
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead><tr><th>Организация</th><th>Всего</th><th>Замена</th><th>Внимание</th><th>OK</th><th>Бюджет</th></tr></thead>
+      <tbody>
+      {% for org in report.by_organization %}
+        <tr>
+          <td>{{ org.organization_name }}</td>
+          <td>{{ org.total_devices }}</td>
+          <td>{{ org.to_replace }}</td>
+          <td>{{ org.attention }}</td>
+          <td>{{ org.ok }}</td>
+          <td>{{ org.estimated_cost }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="text-muted">Нет данных</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
-<!-- ── KPI Cards ──────────────────────────────────────────────────── -->
-<div class="row g-4 mb-4">
-  <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card border-0">
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-            <i class="bi bi-pc-display"></i>
-          </div>
-          <div>
-            <div class="stat-value text-primary">{{ report.total_pcs }}</div>
-            <div class="stat-label">Всего ПК</div>
-          </div>
-        </div>
-        <div class="d-flex gap-2 small text-muted">
-          <span class="text-success fw-medium">{{ report.ok_count }}</span> в порядке
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card border-0">
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="stat-icon bg-danger bg-opacity-10 text-danger">
-            <i class="bi bi-exclamation-octagon"></i>
-          </div>
-          <div>
-            <div class="stat-value text-danger">{{ report.critical_count }}</div>
-            <div class="stat-label">Критичных</div>
-          </div>
-        </div>
-        <div class="small text-muted">Сломан или списан</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card border-0">
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-            <i class="bi bi-arrow-repeat"></i>
-          </div>
-          <div>
-            <div class="stat-value text-warning">{{ report.replacement_count }}</div>
-            <div class="stat-label">Требуют замены</div>
-          </div>
-        </div>
-        <div class="small text-muted">
-          {{ report.replacement_rate }}% от всего парка
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card border-0" style="border-left:3px solid #2563eb !important;">
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="stat-icon bg-info bg-opacity-10 text-info">
-            <i class="bi bi-cash-coin"></i>
-          </div>
-          <div>
-            <div class="stat-value text-info" id="kpi-total-cost" style="font-size:1.4rem;">
-              {{ report.total_cost|rubles }}
-            </div>
-            <div class="stat-label">Стоимость замены</div>
-          </div>
-        </div>
-        <div class="small text-muted">
-          <span id="kpi-price-label">{{ price_per_pc|rubles }}</span> × {{ report.replacement_count }} ед.
-        </div>
-      </div>
-    </div>
+<div class="card card-body">
+  <h2 class="h5">Устройства</h2>
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead><tr><th>Инв.№</th><th>Организация</th><th>Сотрудник</th><th>RAM</th><th>Диск</th><th>Статус</th><th>Причина</th></tr></thead>
+      <tbody>
+      {% for d in report.devices %}
+        <tr>
+          <td>{{ d.inventory_number }}</td>
+          <td>{{ d.organization.name }}</td>
+          <td>{{ d.employee_name|default:"—" }}</td>
+          <td>{{ d.ram|default:"—" }}</td>
+          <td>{{ d.storage_type }}</td>
+          <td>{{ d.get_replacement_status_display }} ({{ d.replacement_score }})</td>
+          <td>{{ d.replacement_reason|default:"—" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
-
-<!-- ── Price Configurator ──────────────────────────────────────────── -->
-<div class="card mb-4" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-  <div class="card-body p-4">
-    <div class="row align-items-center g-3">
-      <div class="col-auto">
-        <i class="bi bi-calculator fs-4 text-primary"></i>
-      </div>
-      <div class="col">
-        <h6 class="mb-1 fw-semibold">Калькулятор бюджета</h6>
-        <p class="mb-0 text-muted small">
-          Измените цену одного ПК — итоговая стоимость пересчитается мгновенно
-        </p>
-      </div>
-      <div class="col-md-4">
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-currency-exchange"></i></span>
-          <input type="number"
-                 id="priceInput"
-                 class="form-control form-control-lg fw-bold"
-                 value="{{ price_per_pc }}"
-                 min="1"
-                 step="1000"
-                 placeholder="Цена ПК (₽)">
-          <span class="input-group-text">₽/шт.</span>
-        </div>
-      </div>
-      <div class="col-md-auto">
-        <button onclick="navigator.clipboard.writeText(window.location.href).then(()=>showToast('Ссылка скопирована','info'))"
-                class="btn btn-outline-secondary btn-sm" title="Скопировать ссылку с текущей ценой">
-          <i class="bi bi-link-45deg me-1"></i>Скопировать ссылку
-        </button>
-      </div>
-    </div>
-
-    <!-- Live total -->
-    <div class="alert alert-info border-0 mt-3 mb-0 d-flex align-items-center gap-3" style="border-radius:10px;">
-      <i class="bi bi-info-circle-fill fs-5"></i>
-      <div>
-        Итого к замене: <strong>{{ report.replacement_count }}</strong> ПК ×
-        <strong id="calc-price">{{ price_per_pc|rubles }}</strong> =
-        <strong id="calc-total" class="text-primary fs-5">{{ report.total_cost|rubles }}</strong>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── By-location breakdown ──────────────────────────────────────── -->
-{% if report.by_location %}
-<div class="card mb-4" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-  <div class="card-header bg-white" style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
-    <h6 class="mb-0 fw-semibold">
-      <i class="bi bi-building me-2 text-primary"></i>По площадкам
-    </h6>
-  </div>
-  <div class="card-body p-0">
-    <div class="table-responsive budget-table-wrap">
-      <table class="table table-hover align-middle mb-0">
-        <thead>
-          <tr class="table-header-row">
-            <th class="ps-4">Площадка</th>
-            <th>Организация</th>
-            <th class="text-center">Всего ПК</th>
-            <th class="text-center">К замене</th>
-            <th class="text-center">Критично</th>
-            <th class="text-center">% замены</th>
-            <th class="text-end pe-4">Стоимость</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for loc in report.by_location %}
-          <tr>
-            <td class="ps-4 fw-medium">{{ loc.location_name }}</td>
-            <td class="text-muted small">{{ loc.organization_name }}</td>
-            <td class="text-center">{{ loc.total_pcs }}</td>
-            <td class="text-center">
-              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3">
-                {{ loc.to_replace }}
-              </span>
-            </td>
-            <td class="text-center">
-              {% if loc.critical_count %}
-              <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-3">
-                {{ loc.critical_count }}
-              </span>
-              {% else %}
-              <span class="text-muted">—</span>
-              {% endif %}
-            </td>
-            <td class="text-center">
-              <div class="d-flex align-items-center gap-2 justify-content-center">
-                <div class="progress flex-grow-1" style="height:6px;max-width:60px;">
-                  <div class="progress-bar {% if loc.replacement_rate > 50 %}bg-danger{% elif loc.replacement_rate > 25 %}bg-warning{% else %}bg-info{% endif %}"
-                       style="width:{{ loc.replacement_rate }}%"></div>
-                </div>
-                <small class="text-muted">{{ loc.replacement_rate }}%</small>
-              </div>
-            </td>
-            <td class="text-end pe-4 fw-semibold"
-                data-replace-count="{{ loc.to_replace }}"
-                data-loc-cost>
-              {{ loc.estimated_cost|rubles }}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-        <tfoot class="table-light">
-          <tr class="fw-semibold">
-            <td class="ps-4" colspan="3">Итого</td>
-            <td class="text-center">{{ report.replacement_count }}</td>
-            <td class="text-center">{{ report.critical_count }}</td>
-            <td class="text-center">{{ report.replacement_rate }}%</td>
-            <td class="text-end pe-4 text-primary" id="tfoot-total">
-              {{ report.total_cost|rubles }}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<!-- ── Full replacement list ──────────────────────────────────────── -->
-{% if report.needing_replacement %}
-<div class="card" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-  <div class="card-header bg-white d-flex align-items-center justify-content-between"
-       style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
-    <h6 class="mb-0 fw-semibold">
-      <i class="bi bi-list-check me-2 text-primary"></i>
-      Список ПК к замене ({{ report.replacement_count }})
-    </h6>
-    <div class="d-flex gap-2">
-      <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">
-        Критично: {{ report.critical_count }}
-      </span>
-      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-        Планово: {{ report.medium_count }}
-      </span>
-      <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
-        Рекомендовано: {{ report.low_count }}
-      </span>
-    </div>
-  </div>
-  <div class="card-body p-0">
-    <div class="table-responsive budget-table-wrap">
-      <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
-        <thead>
-          <tr class="table-header-row">
-            <th class="ps-4">Инв. номер</th>
-            <th>Наименование</th>
-            <th>Площадка</th>
-            <th>ОЗУ</th>
-            <th>Накопитель</th>
-            <th>Статус</th>
-            <th class="pe-4">Причины замены</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for a in report.needing_replacement %}
-          <tr class="{% if a.severity == 'critical' %}table-danger-subtle{% elif a.severity == 'medium' %}table-warning-subtle{% endif %}">
-            <td class="ps-4">
-              <a href="{% url 'pc-edit-modal' a.pc.pk %}"
-                 class="fw-semibold text-decoration-none"
-                 hx-get="{% url 'pc-edit-modal' a.pc.pk %}"
-                 hx-target="#modal-container"
-                 hx-swap="innerHTML">
-                {{ a.pc.inventory_number }}
-              </a>
-            </td>
-            <td>{{ a.pc.name }}</td>
-            <td class="text-muted small">{{ a.pc.location }}</td>
-            <td>
-              {% if a.pc.ram %}
-                <span class="{% if a.pc.ram < 8 %}text-danger fw-semibold{% else %}text-muted{% endif %}">
-                  {{ a.pc.ram }} ГБ
-                </span>
-              {% else %}<span class="text-muted">—</span>{% endif %}
-            </td>
-            <td class="text-muted small">
-              {% if a.pc.storage_type and a.pc.storage_type != 'None' %}
-                {% if a.pc.storage_type == 'HDD' %}
-                  <span class="text-warning fw-semibold">HDD</span>
-                {% else %}{{ a.pc.storage_type }}{% endif %}
-                {% if a.pc.storage_size %} {{ a.pc.storage_size }}G{% endif %}
-              {% else %}—{% endif %}
-            </td>
-            <td>
-              <span class="status-badge status-{{ a.pc.status }}">{{ a.pc.get_status_display }}</span>
-            </td>
-            <td class="pe-4">
-              <div class="d-flex flex-wrap gap-1">
-                {% for reason in a.reasons %}
-                <span class="badge
-                  {% if reason.severity == 'critical' %}bg-danger
-                  {% elif reason.severity == 'medium' %}bg-warning text-dark
-                  {% else %}bg-secondary{% endif %}"
-                  title="{{ reason.label }}">
-                  {{ reason.label|truncatechars:30 }}
-                </span>
-                {% endfor %}
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-{% else %}
-<div class="card text-center py-5" style="border-radius:12px;border:2px dashed #d1fae5;">
-  <div class="card-body">
-    <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-3"></i>
-    <h5 class="fw-bold text-success">Все компьютеры в норме!</h5>
-    <p class="text-muted mb-0">Нет ПК, требующих замены по текущим критериям.</p>
-  </div>
-</div>
-{% endif %}
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function () {
-  const REPLACE_COUNT = {{ report.replacement_count }};
-  const locRows = document.querySelectorAll('[data-loc-cost]');
-
-  function fmt(n) {
-    return n.toLocaleString('ru-RU') + '\u00a0₽';
-  }
-
-  function update(price) {
-    const total = price * REPLACE_COUNT;
-
-    // KPI card
-    document.getElementById('kpi-total-cost').textContent = fmt(total);
-    document.getElementById('kpi-price-label').textContent = fmt(price);
-
-    // Calculator row
-    document.getElementById('calc-price').textContent = fmt(price);
-    document.getElementById('calc-total').textContent = fmt(total);
-
-    // Table footer
-    document.getElementById('tfoot-total').textContent = fmt(total);
-
-    // Per-location rows
-    locRows.forEach(td => {
-      const count = parseInt(td.dataset.replaceCount, 10) || 0;
-      td.textContent = fmt(count * price);
-    });
-  }
-
-  const input = document.getElementById('priceInput');
-  if (input) {
-    input.addEventListener('input', () => {
-      const v = parseInt(input.value, 10);
-      if (v > 0) {
-        update(v);
-        // Keep URL in sync so it can be bookmarked / shared
-        const url = new URL(window.location);
-        url.searchParams.set('price', v);
-        history.replaceState(null, '', url.toString());
-      }
-    });
-  }
-})();
-</script>
 {% endblock %}

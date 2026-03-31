@@ -17,7 +17,7 @@ from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
 
-from apps.inventory.models import DeviceStatus, SystemSettings
+from apps.inventory.models import ReplacementStatus, SystemSettings
 from apps.inventory.services.budget import (
     _BUDGET_CACHE_KEY,
     get_cached_budget_report,
@@ -152,7 +152,7 @@ class TestBudgetCache:
         assert cache.get(_BUDGET_CACHE_KEY) is not None
 
         pc = DeviceFactory()
-        pc.status = DeviceStatus.BROKEN
+        pc.replacement_status = ReplacementStatus.REPLACE
         pc.save()
 
         assert cache.get(_BUDGET_CACHE_KEY) is None

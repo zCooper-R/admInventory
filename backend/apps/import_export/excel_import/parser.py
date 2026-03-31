@@ -8,11 +8,14 @@ from .types import ParseResult, ParsedRow
 
 HEADER_ALIASES: dict[str, str] = {
     "наименование юридического лица": "organization_name",
+    "адрес организации": "organization_address",
+    "адрес": "organization_address",
+    "площадка": "organization_address",
     "инв. №": "inventory_number",
     "инв №": "inventory_number",
     "инвентарный номер": "inventory_number",
     "наименование ос": "os",
-    "наименование процессора": "cpu",
+    "наименование процессора": "cpu_model",
     "тактовая частота": "cpu_frequency",
     "оперативная память": "ram",
     "тип диска": "storage_type",
@@ -21,24 +24,18 @@ HEADER_ALIASES: dict[str, str] = {
     "браузер которым пользуетесь": "browser",
     "наличие личного аккаунта google, аккаунта apple или аккаунта microsoft": "accounts",
     "скорость интернета": "internet_speed",
-    "провайдер": "internet_provider",
-    "аттестованный компьютер": "is_attested",
-    "работа с текстом": "work_with_text",
-    "работа с картинками, фотографиями": "work_with_images",
-    "создание презентаций": "create_presentations",
-    "работа с аудио": "work_with_audio",
-    "работа с видео": "work_with_video",
+    "провайдер": "provider",
+    "аттестованный компьютер": "is_certified",
+    "работа с текстом": "use_for_text",
+    "работа с картинками, фотографиями": "use_for_images",
+    "создание презентаций": "use_for_presentations",
+    "работа с аудио": "use_for_audio",
+    "работа с видео": "use_for_video",
     "фамилия, инициалы сотрудника": "employee_name",
     "должность": "position",
 }
 
-REQUIRED_HEADERS = {
-    "organization_name",
-    "inventory_number",
-    "os",
-    "ram",
-    "storage_type",
-}
+REQUIRED_HEADERS = {"organization_name", "inventory_number", "os", "ram", "storage_type"}
 
 
 def _normalize_header(value: Any) -> str:
@@ -88,7 +85,6 @@ def parse_excel(path: str) -> ParseResult:
 
     for excel_row_number, raw_row in enumerate(rows_iter, start=2):
         row_values = [_normalize_cell(v) for v in raw_row]
-
         if not any(row_values):
             continue
         if _is_numbering_row(row_values):

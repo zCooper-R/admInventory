@@ -8,7 +8,7 @@ Available tags / filters
 ``query_url``           — merge current GET params with extra kwargs.
 ``sort_url``            — produce a sort URL toggling ASC/DESC.
 ``sort_icon``           — Bootstrap icon class for sort indicator.
-``critical_pc_count``   — number of broken/written-off PCs (topbar badge).
+``critical_pc_count``   — number of PCs with replacement_status=replace.
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
@@ -104,14 +104,14 @@ def sort_icon(context, field):
 @register.simple_tag
 def critical_pc_count():
     """
-    Number of PCs that are broken or written off.
+    Number of PCs that require replacement.
     Used in the topbar to alert managers.
     """
     try:
-        from apps.inventory.models import Device, DeviceType, DeviceStatus
+        from apps.inventory.models import Device, DeviceType, ReplacementStatus
         return Device.objects.filter(
             device_type=DeviceType.PC,
-            status__in=[DeviceStatus.BROKEN, DeviceStatus.WRITE_OFF],
+            replacement_status=ReplacementStatus.REPLACE,
         ).count()
     except Exception:
         return 0

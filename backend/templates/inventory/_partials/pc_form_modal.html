@@ -1,186 +1,30 @@
-{% comment %}
-  PC create / edit form rendered inside the HTMX modal.
-
-  Bootstrap validation
-  ────────────────────
-  The form has class="needs-validation" + novalidate.
-  Client-side:  JS intercepts htmx:configRequest, adds "was-validated",
-                cancels if checkValidity() fails.
-  Server-side:  PCForm.__init__() appends "is-invalid" to widgets with
-                errors → invalid-feedback divs become visible.
-
-  Layout (3 sections to fit on one screen):
-    1. Identification  : name · inventory_number · serial_number
-    2. Hardware        : cpu · os · ram · storage_type · storage_size · purchase_date
-    3. Status & Place  : status · location · assigned_to
-{% endcomment %}
-
-<div class="modal fade" id="pcModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-fullscreen-md-down modal-dialog-scrollable">
+﻿<div class="modal fade" id="pcModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
-
-      <div class="modal-header border-bottom py-3">
-        <h5 class="modal-title fw-semibold">
-          <i class="bi bi-pc-display me-2 text-primary"></i>{{ title }}
-        </h5>
+      <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
         <button type="button" class="btn-close" id="modalCloseBtn" aria-label="Закрыть"></button>
       </div>
 
-      <form id="pcModalForm"
-            method="post"
-            class="needs-validation"
-            novalidate
-            hx-post="{{ action_url }}"
-            hx-target="#modal-container"
-            hx-swap="innerHTML">
+      <form method="post" hx-post="{{ action_url }}" hx-target="#modal-container" hx-swap="innerHTML">
         {% csrf_token %}
-
-        <div class="modal-body pb-2">
-          <p class="section-title">
-            <i class="bi bi-tag me-2 text-primary"></i>Идентификация
-          </p>
-          <div class="row g-3 mb-3">
-
-            <div class="col-sm-5">
-              <label for="{{ form.name.id_for_label }}" class="form-label fw-medium">
-                {{ form.name.label }}&thinsp;<span class="text-danger" title="Обязательное поле">*</span>
-              </label>
-              {{ form.name }}
-              <div class="invalid-feedback">
-                {% if form.name.errors %}{{ form.name.errors|join:", " }}{% else %}Введите наименование ПК.{% endif %}
-              </div>
-              {% if form.name.help_text %}<div class="form-text">{{ form.name.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-4">
-              <label for="{{ form.inventory_number.id_for_label }}" class="form-label fw-medium">
-                {{ form.inventory_number.label }}&thinsp;<span class="text-danger" title="Обязательное поле">*</span>
-              </label>
-              {{ form.inventory_number }}
-              <div class="invalid-feedback">
-                {% if form.inventory_number.errors %}{{ form.inventory_number.errors|join:", " }}{% else %}Введите инвентарный номер.{% endif %}
-              </div>
-              {% if form.inventory_number.help_text %}<div class="form-text">{{ form.inventory_number.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-3">
-              <label for="{{ form.serial_number.id_for_label }}" class="form-label fw-medium">
-                {{ form.serial_number.label }}
-              </label>
-              {{ form.serial_number }}
-              {% if form.serial_number.errors %}<div class="invalid-feedback d-block">{{ form.serial_number.errors|join:", " }}</div>{% endif %}
-              {% if form.serial_number.help_text %}<div class="form-text">{{ form.serial_number.help_text }}</div>{% endif %}
-            </div>
-
-          </div>
-          <p class="section-title mt-1">
-            <i class="bi bi-cpu me-2 text-success"></i>Характеристики
-          </p>
-          <div class="row g-3 mb-3">
-
-            <div class="col-sm-6">
-              <label for="{{ form.cpu.id_for_label }}" class="form-label fw-medium">{{ form.cpu.label }}</label>
-              {{ form.cpu }}
-              {% if form.cpu.errors %}<div class="invalid-feedback d-block">{{ form.cpu.errors|join:", " }}</div>{% endif %}
-              {% if form.cpu.help_text %}<div class="form-text">{{ form.cpu.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-6">
-              <label for="{{ form.os.id_for_label }}" class="form-label fw-medium">{{ form.os.label }}</label>
-              {{ form.os }}
-              {% if form.os.errors %}<div class="invalid-feedback d-block">{{ form.os.errors|join:", " }}</div>{% endif %}
-              {% if form.os.help_text %}<div class="form-text">{{ form.os.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-2">
-              <label for="{{ form.ram.id_for_label }}" class="form-label fw-medium">{{ form.ram.label }}</label>
-              <div class="input-group">
-                {{ form.ram }}
-                <span class="input-group-text">ГБ</span>
-              </div>
-              {% if form.ram.errors %}<div class="text-danger small mt-1">{{ form.ram.errors|join:", " }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-2">
-              <label for="{{ form.storage_type.id_for_label }}" class="form-label fw-medium">{{ form.storage_type.label }}</label>
-              {{ form.storage_type }}
-              {% if form.storage_type.errors %}<div class="invalid-feedback d-block">{{ form.storage_type.errors|join:", " }}</div>{% endif %}
-              {% if form.storage_type.help_text %}<div class="form-text">{{ form.storage_type.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-2">
-              <label for="{{ form.storage_size.id_for_label }}" class="form-label fw-medium">{{ form.storage_size.label }}</label>
-              <div class="input-group">
-                {{ form.storage_size }}
-                <span class="input-group-text">ГБ</span>
-              </div>
-              {% if form.storage_size.errors %}<div class="text-danger small mt-1">{{ form.storage_size.errors|join:", " }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-3">
-              <label for="{{ form.purchase_date.id_for_label }}" class="form-label fw-medium">{{ form.purchase_date.label }}</label>
-              {{ form.purchase_date }}
-              {% if form.purchase_date.errors %}<div class="invalid-feedback d-block">{{ form.purchase_date.errors|join:", " }}</div>{% endif %}
-              {% if form.purchase_date.help_text %}<div class="form-text">{{ form.purchase_date.help_text }}</div>{% endif %}
-            </div>
-
-          </div>
-
-          <p class="section-title mt-1">
-            <i class="bi bi-building me-2 text-warning"></i>Статус и расположение
-          </p>
+        <div class="modal-body">
           <div class="row g-3">
-
-            <div class="col-sm-3">
-              <label for="{{ form.status.id_for_label }}" class="form-label fw-medium">
-                {{ form.status.label }}&thinsp;<span class="text-danger" title="Обязательное поле">*</span>
-              </label>
-              {{ form.status }}
-              <div class="invalid-feedback">
-                {% if form.status.errors %}{{ form.status.errors|join:", " }}{% else %}Выберите статус.{% endif %}
+            {% for field in form %}
+              <div class="col-md-4">
+                <label class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                {{ field }}
+                {% if field.errors %}<div class="text-danger small">{{ field.errors|join:", " }}</div>{% endif %}
               </div>
-              {% if form.status.help_text %}<div class="form-text">{{ form.status.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-5">
-              <label for="{{ form.location.id_for_label }}" class="form-label fw-medium">
-                {{ form.location.label }}&thinsp;<span class="text-danger" title="Обязательное поле">*</span>
-              </label>
-              {{ form.location }}
-              <div class="invalid-feedback">
-                {% if form.location.errors %}{{ form.location.errors|join:", " }}{% else %}Выберите площадку.{% endif %}
-              </div>
-              {% if form.location.help_text %}<div class="form-text">{{ form.location.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="col-sm-4">
-              <label for="{{ form.assigned_to.id_for_label }}" class="form-label fw-medium">{{ form.assigned_to.label }}</label>
-              {{ form.assigned_to }}
-              {% if form.assigned_to.errors %}<div class="invalid-feedback d-block">{{ form.assigned_to.errors|join:", " }}</div>{% endif %}
-              {% if form.assigned_to.help_text %}<div class="form-text">{{ form.assigned_to.help_text }}</div>{% endif %}
-            </div>
-
+            {% endfor %}
           </div>
-
-          {# Non-field errors #}
-          {% if form.non_field_errors %}
-          <div class="alert alert-danger mt-3 py-2">
-            <i class="bi bi-exclamation-triangle me-2"></i>{{ form.non_field_errors|join:" " }}
-          </div>
-          {% endif %}
-
-        </div>{# /modal-body #}
-
-        <div class="modal-footer border-top py-2">
-          <button type="button" class="btn btn-outline-secondary" id="modalCancelBtn">Отмена</button>
-          <button type="submit" class="btn btn-primary px-4">
-            <i class="bi bi-floppy me-1"></i>
-            {% if is_create %}Создать{% else %}Сохранить{% endif %}
-          </button>
+          {% if form.non_field_errors %}<div class="alert alert-danger mt-3">{{ form.non_field_errors|join:" " }}</div>{% endif %}
         </div>
-
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="modalCancelBtn">Отмена</button>
+          <button type="submit" class="btn btn-primary">{% if is_create %}Создать{% else %}Сохранить{% endif %}</button>
+        </div>
       </form>
-
     </div>
   </div>
 </div>
@@ -189,12 +33,10 @@
 (function () {
   var el = document.getElementById('pcModal');
   if (el) bootstrap.Modal.getOrCreateInstance(el).show();
-
   function closeModal() {
     var m = document.getElementById('pcModal');
     if (m) bootstrap.Modal.getInstance(m)?.hide();
   }
-
   document.getElementById('modalCloseBtn')?.addEventListener('click', closeModal);
   document.getElementById('modalCancelBtn')?.addEventListener('click', closeModal);
 }());

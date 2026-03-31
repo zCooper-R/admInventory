@@ -1,84 +1,45 @@
-{% extends 'base.html' %}
-{% load inventory_tags %}
+﻿{% extends 'base.html' %}
 
-{% block title %}Компьютеры — IT Инвентарь{% endblock %}
+{% block title %}Устройства — IT Инвентарь{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item active">Компьютеры</li>
+<li class="breadcrumb-item active">Устройства</li>
 {% endblock %}
 
 {% block content %}
-
 <div class="page-header">
   <div>
-    <h1 class="page-title">Компьютеры</h1>
-    <p class="page-subtitle" id="result-count">Загрузка...</p>
+    <h1 class="page-title">Устройства</h1>
+    <p class="page-subtitle">Всего: {{ total_count }}</p>
   </div>
   <div class="d-flex gap-2 flex-wrap">
-    <!-- HTMX: opens create modal, no page reload -->
-    <button class="btn btn-primary"
-            hx-get="{% url 'pc-create-modal' %}"
-            hx-target="#modal-container"
-            hx-swap="innerHTML">
-      <i class="bi bi-plus-lg me-1"></i>Добавить ПК
+    <button class="btn btn-primary" hx-get="{% url 'pc-create-modal' %}" hx-target="#modal-container" hx-swap="innerHTML">
+      <i class="bi bi-plus-lg me-1"></i>Добавить устройство
     </button>
-    <a href="{% url 'pc-import' %}" class="btn btn-outline-secondary">
-      <i class="bi bi-upload me-1"></i>Импорт
-    </a>
-    <a href="{% url 'pc-export' %}" class="btn btn-outline-success">
-      <i class="bi bi-download me-1"></i>Экспорт
-    </a>
+    <a href="{% url 'pc-import' %}" class="btn btn-outline-secondary"><i class="bi bi-upload me-1"></i>Импорт</a>
+    <a href="{% url 'pc-export' %}" class="btn btn-outline-success"><i class="bi bi-download me-1"></i>Экспорт</a>
   </div>
 </div>
 
-<!-- ── Filter Bar ───────────────────────────────────────────────────── -->
 <div class="filter-bar mb-4">
-  <form id="filterForm"
-        hx-get="{% url 'pc-list' %}"
-        hx-target="#pc-table-wrapper"
-        hx-swap="innerHTML"
-        hx-push-url="true"
-        hx-trigger="change delay:200ms, keyup delay:500ms from:#id_search"
-        hx-indicator="#table-spinner">
+  <form id="filterForm" hx-get="{% url 'pc-list' %}" hx-target="#pc-table-wrapper" hx-swap="innerHTML" hx-push-url="true">
     <div class="row g-2 align-items-end">
-      <div class="col-12 col-md-5">
-        <label class="form-label small fw-semibold text-muted mb-1">Поиск</label>
-        {{ form.search }}
-      </div>
-      <div class="col-6 col-md-2">
-        <label class="form-label small fw-semibold text-muted mb-1">Статус</label>
-        {{ form.status }}
-      </div>
-      <div class="col-6 col-md-3">
-        <label class="form-label small fw-semibold text-muted mb-1">Площадка</label>
-        {{ form.location }}
-      </div>
+      <div class="col-12 col-md-4">{{ form.search }}</div>
+      <div class="col-6 col-md-2">{{ form.organization }}</div>
+      <div class="col-6 col-md-2">{{ form.position }}</div>
+      <div class="col-6 col-md-2">{{ form.browser }}</div>
+      <div class="col-6 col-md-2">{{ form.replacement_status }}</div>
+      <div class="col-6 col-md-2">{{ form.storage_type }}</div>
+      <div class="col-6 col-md-2">{{ form.internet_speed }}</div>
       <div class="col-12 col-md-2 d-flex gap-2">
-        <button type="submit" class="btn btn-primary flex-grow-1">
-          <i class="bi bi-search"></i>
-        </button>
-        <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary" title="Сбросить">
-          <i class="bi bi-x-lg"></i>
-        </a>
+        <button type="submit" class="btn btn-primary flex-grow-1">Фильтр</button>
+        <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary">Сброс</a>
       </div>
     </div>
   </form>
 </div>
 
-<!-- ── Table wrapper (HTMX loads content here) ──────────────────────── -->
-<div id="pc-table-wrapper"
-     hx-get="{% url 'pc-list' %}"
-     hx-trigger="load"
-     hx-include="#filterForm"
-     hx-indicator="#table-spinner">
-
-  <!-- Spinner shown while loading -->
-  <div id="table-spinner" class="htmx-indicator text-center py-5">
-    <div class="spinner-border text-primary" role="status" style="width:2rem;height:2rem;">
-      <span class="visually-hidden">Загрузка...</span>
-    </div>
-    <p class="text-muted mt-2 mb-0">Загрузка данных...</p>
-  </div>
+<div id="pc-table-wrapper">
+  {% include 'inventory/_partials/pc_table.html' %}
 </div>
-
 {% endblock %}

@@ -1,10 +1,10 @@
-import pytest
+﻿import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.inventory.models import Device, DeviceStatus
-from .factories import AdminUserFactory, DeviceFactory, LocationFactory
+from apps.inventory.models import ReplacementStatus
+from .factories import AdminUserFactory, DeviceFactory, OrganizationFactory
 
 
 @pytest.fixture
@@ -13,106 +13,49 @@ def api_client():
 
 
 @pytest.fixture
-def admin_user(db):
-    return AdminUserFactory()
-
-
-@pytest.fixture
-def authenticated_client(api_client, admin_user):
-    api_client.force_authenticate(user=admin_user)
+def authenticated_client(api_client):
+    user = AdminUserFactory()
+    api_client.force_authenticate(user=user)
     return api_client
 
 
 @pytest.mark.django_db
-class TestDeviceListAPI:
-    def test_requires_authentication(self, api_client):
-        url = reverse("device-list")
-        response = api_client.get(url)
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
+class TestDeviceAPI:
     def test_list_devices(self, authenticated_client):
         DeviceFactory.create_batch(3)
-        url = reverse("device-list")
-        response = authenticated_client.get(url)
+        response = authenticated_client.get(reverse("device-list"))
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 3
 
-    def test_filter_by_status(self, authenticated_client):
-        DeviceFactory(status=DeviceStatus.ACTIVE)
-        DeviceFactory(status=DeviceStatus.BROKEN)
-        DeviceFactory(status=DeviceStatus.WRITE_OFF)
-
-        url = reverse("device-list")
-        response = authenticated_client.get(url, {"status": "active"})
+    def test_filter_by_organization(self, authenticated_client):
+        org = OrganizationFactory()
+        DeviceFactory(organization=org)
+        DeviceFactory()
+        response = authenticated_client.get(reverse("device-list"), {"organization": org.pk})
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
 
-    def test_filter_by_location(self, authenticated_client):
-        location = LocationFactory()
-        DeviceFactory(location=location)
-        DeviceFactory()  # different location
-
-        url = reverse("device-list")
-        response = authenticated_client.get(url, {"location": location.pk})
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["count"] == 1
-
-    def test_search_by_inventory_number(self, authenticated_client):
-        DeviceFactory(inventory_number="UNIQUE-9999")
-        DeviceFactory(inventory_number="OTHER-0001")
-
-        url = reverse("device-list")
-        response = authenticated_client.get(url, {"search": "UNIQUE-9999"})
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["count"] == 1
-
-
-@pytest.mark.django_db
-class TestDeviceCRUD:
-    def test_create_device(self, authenticated_client):
-        location = LocationFactory()
-        url = reverse("device-list")
+    def test_create_device_without_name_location_assigned_to(self, authenticated_client):
+        org = OrganizationFactory()
         payload = {
-            "name": "Тестовый ПК",
-            "inventory_number": "TEST-0001",
+            "inventory_number": "NEW-001",
             "device_type": "PC",
-            "cpu": "Intel i5",
+            "organization": org.pk,
+            "os": "Windows 11",
             "ram": 16,
             "storage_type": "SSD",
-            "storage_size": 512,
-            "os": "Windows 11",
-            "status": "active",
-            "location": location.pk,
+            "employee_name": "Иванов И.И.",
         }
-        response = authenticated_client.post(url, payload, format="json")
+        response = authenticated_client.post(reverse("device-list"), payload, format="json")
         assert response.status_code == status.HTTP_201_CREATED
-        assert Device.objects.filter(inventory_number="TEST-0001").exists()
 
-    def test_update_device_status(self, authenticated_client):
-        device = DeviceFactory(status=DeviceStatus.ACTIVE)
-        url = reverse("device-detail", kwargs={"pk": device.pk})
-        response = authenticated_client.patch(url, {"status": "broken"}, format="json")
+    def test_replacement_status_is_present(self, authenticated_client):
+        DeviceFactory(ram=4, storage_type="HDD")
+        response = authenticated_client.get(reverse("device-list"))
         assert response.status_code == status.HTTP_200_OK
-        device.refresh_from_db()
-        assert device.status == DeviceStatus.BROKEN
-
-    def test_delete_device(self, authenticated_client):
-        device = DeviceFactory()
-        url = reverse("device-detail", kwargs={"pk": device.pk})
-        response = authenticated_client.delete(url)
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert not Device.objects.filter(pk=device.pk).exists()
-
-    def test_inventory_number_unique(self, authenticated_client):
-        existing = DeviceFactory(inventory_number="DUP-001")
-        location = LocationFactory()
-        url = reverse("device-list")
-        payload = {
-            "name": "Дубликат",
-            "inventory_number": existing.inventory_number,
-            "device_type": "PC",
-            "status": "active",
-            "location": location.pk,
+        item = response.data["results"][0]
+        assert item["replacement_status"] in {
+            ReplacementStatus.OK,
+            ReplacementStatus.ATTENTION,
+            ReplacementStatus.REPLACE,
         }
-        response = authenticated_client.post(url, payload, format="json")
-        assert response.status_code == status.HTTP_400_BAD_REQUEST

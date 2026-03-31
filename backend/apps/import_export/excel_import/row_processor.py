@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from django.db import transaction
 
-from apps.inventory.models import Device, DeviceStatus, DeviceType
+from apps.inventory.models import Device, DeviceType
 
 from .normalizers import (
     normalize_text,
@@ -56,7 +56,7 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
     if not storage_type:
         raise ValueError("Тип диска должен быть SSD или HDD")
 
-    organization = OrganizationResolver.resolve_or_create(organization_name)
+    organization = OrganizationResolver.resolve_or_create(organization_name, values.get("organization_address", ""))
     position = PositionResolver.resolve_or_create(values.get("position", ""))
     browser = BrowserResolver.resolve_or_create(values.get("browser", ""))
 
@@ -64,11 +64,9 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
 
     values_to_apply = {
         "organization": organization,
-        "name": "",
         "device_type": DeviceType.PC,
-        "status": DeviceStatus.ACTIVE,
         "os": os_name,
-        "cpu": normalize_text(values.get("cpu", "")),
+        "cpu_model": normalize_text(values.get("cpu_model", "")),
         "cpu_frequency": parse_frequency(values.get("cpu_frequency", "")),
         "ram": ram,
         "storage_type": storage_type,
@@ -78,13 +76,13 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
         "has_apple_account": has_apple,
         "has_microsoft_account": has_microsoft,
         "internet_speed": parse_internet_speed(values.get("internet_speed", "")),
-        "internet_provider": normalize_text(values.get("internet_provider", "")),
-        "is_attested": parse_bool(values.get("is_attested", "")),
-        "work_with_text": parse_bool(values.get("work_with_text", "")),
-        "work_with_images": parse_bool(values.get("work_with_images", "")),
-        "create_presentations": parse_bool(values.get("create_presentations", "")),
-        "work_with_audio": parse_bool(values.get("work_with_audio", "")),
-        "work_with_video": parse_bool(values.get("work_with_video", "")),
+        "provider": normalize_text(values.get("provider", "")),
+        "is_certified": parse_bool(values.get("is_certified", "")),
+        "use_for_text": parse_bool(values.get("use_for_text", "")),
+        "use_for_images": parse_bool(values.get("use_for_images", "")),
+        "use_for_presentations": parse_bool(values.get("use_for_presentations", "")),
+        "use_for_audio": parse_bool(values.get("use_for_audio", "")),
+        "use_for_video": parse_bool(values.get("use_for_video", "")),
         "employee_name": normalize_text(values.get("employee_name", "")),
         "position": position,
     }
@@ -92,7 +90,7 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
     device = Device.objects.filter(inventory_number=inventory_number).first()
     created = device is None
     if created:
-        device = Device(inventory_number=inventory_number, location=None, assigned_to=None)
+        device = Device(inventory_number=inventory_number, organization=organization)
 
     for field_name, field_value in values_to_apply.items():
         setattr(device, field_name, field_value)

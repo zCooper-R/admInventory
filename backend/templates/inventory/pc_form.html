@@ -1,158 +1,25 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}{{ title }} — IT Инвентарь{% endblock %}
 
 {% block content %}
-
-<!-- ── Page Header ──────────────────────────────────────────────────── -->
-<div class="page-header">
-  <div>
-    <h1 class="page-title">{{ title }}</h1>
-    <p class="page-subtitle">
-      {% if is_create %}Заполните данные нового компьютера
-      {% else %}Редактирование записи: <code>{{ pc.inventory_number }}</code>{% endif %}
-    </p>
-  </div>
-  <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary">
-    <i class="bi bi-arrow-left me-1"></i>Назад к списку
-  </a>
+<div class="card card-body">
+  <h1 class="h4 mb-3">{{ title }}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row g-3">
+      {% for field in form %}
+        <div class="col-md-4">
+          <label class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<div class="text-danger small">{{ field.errors|join:", " }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="mt-3 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Сохранить</button>
+      <a class="btn btn-outline-secondary" href="{% url 'pc-list' %}">Отмена</a>
+    </div>
+  </form>
 </div>
-
-<form method="post" novalidate>
-  {% csrf_token %}
-
-  <div class="row g-4">
-
-    <!-- ── Left Column ────────────────────────────────────────────── -->
-    <div class="col-lg-8">
-
-      <!-- Identification -->
-      <div class="card form-section-card mb-4">
-        <div class="card-body p-4">
-          <h6 class="section-title">
-            <i class="bi bi-tag me-2 text-primary"></i>Идентификация
-          </h6>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label fw-medium">
-                {{ form.name.label }} <span class="text-danger">*</span>
-              </label>
-              {{ form.name }}
-              {% if form.name.errors %}
-              <div class="text-danger small mt-1">{{ form.name.errors.as_text }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-medium">
-                {{ form.inventory_number.label }} <span class="text-danger">*</span>
-              </label>
-              {{ form.inventory_number }}
-              {% if form.inventory_number.errors %}
-              <div class="text-danger small mt-1">{{ form.inventory_number.errors.as_text }}</div>
-              {% endif %}
-              <div class="form-text">Уникальный инвентарный номер</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hardware -->
-      <div class="card form-section-card">
-        <div class="card-body p-4">
-          <h6 class="section-title">
-            <i class="bi bi-cpu me-2 text-primary"></i>Характеристики железа
-          </h6>
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label fw-medium">{{ form.cpu.label }}</label>
-              {{ form.cpu }}
-            </div>
-            <div class="col-sm-4">
-              <label class="form-label fw-medium">{{ form.ram.label }}</label>
-              <div class="input-group">
-                {{ form.ram }}
-                <span class="input-group-text">ГБ</span>
-              </div>
-              {% if form.ram.errors %}
-              <div class="text-danger small mt-1">{{ form.ram.errors.as_text }}</div>
-              {% endif %}
-            </div>
-            <div class="col-sm-4">
-              <label class="form-label fw-medium">{{ form.storage_type.label }}</label>
-              {{ form.storage_type }}
-            </div>
-            <div class="col-sm-4">
-              <label class="form-label fw-medium">{{ form.storage_size.label }}</label>
-              <div class="input-group">
-                {{ form.storage_size }}
-                <span class="input-group-text">ГБ</span>
-              </div>
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-medium">{{ form.os.label }}</label>
-              {{ form.os }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /col-lg-8 -->
-
-    <!-- ── Right Column ───────────────────────────────────────────── -->
-    <div class="col-lg-4">
-
-      <!-- Placement -->
-      <div class="card form-section-card mb-4">
-        <div class="card-body p-4">
-          <h6 class="section-title">
-            <i class="bi bi-geo-alt me-2 text-primary"></i>Размещение
-          </h6>
-          <div class="mb-3">
-            <label class="form-label fw-medium">
-              {{ form.status.label }} <span class="text-danger">*</span>
-            </label>
-            {{ form.status }}
-            {% if form.status.errors %}
-            <div class="text-danger small mt-1">{{ form.status.errors.as_text }}</div>
-            {% endif %}
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-medium">
-              {{ form.location.label }} <span class="text-danger">*</span>
-            </label>
-            {{ form.location }}
-            {% if form.location.errors %}
-            <div class="text-danger small mt-1">{{ form.location.errors.as_text }}</div>
-            {% endif %}
-          </div>
-          <div>
-            <label class="form-label fw-medium">{{ form.assigned_to.label }}</label>
-            {{ form.assigned_to }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="card form-section-card">
-        <div class="card-body p-4">
-          <button type="submit" class="btn btn-primary w-100 mb-2">
-            <i class="bi bi-check-lg me-1"></i>
-            {% if is_create %}Создать компьютер{% else %}Сохранить изменения{% endif %}
-          </button>
-          <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary w-100">
-            Отмена
-          </a>
-          {% if not is_create %}
-          <hr class="my-3">
-          <a href="{% url 'pc-delete' pc.pk %}" class="btn btn-outline-danger w-100">
-            <i class="bi bi-trash me-1"></i>Удалить этот ПК
-          </a>
-          {% endif %}
-        </div>
-      </div>
-
-    </div><!-- /col-lg-4 -->
-  </div><!-- /row -->
-</form>
-
 {% endblock %}

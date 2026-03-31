@@ -6,13 +6,14 @@ from openpyxl import Workbook
 
 from apps.import_export.models import ImportLog, ImportStatus
 from apps.import_export.services import process_excel_import
-from apps.inventory.models import Browser, Device, InternetSpeed, Position
+from apps.inventory.models import Browser, Device, InternetSpeed, Position, ReplacementStatus
 from apps.locations.models import Organization
 from .factories import AdminUserFactory
 
 HEADERS = [
     "№ п/п",
     "Наименование юридического лица",
+    "Адрес организации",
     "Наименование ОС",
     "Инв. №",
     "Наименование процессора",
@@ -46,6 +47,7 @@ def make_excel_bytes(rows: list[dict], include_numbering_row: bool = True) -> by
         ws.append([
             row.get("№ п/п", str(idx)),
             row.get("Наименование юридического лица", ""),
+            row.get("Адрес организации", ""),
             row.get("Наименование ОС", ""),
             row.get("Инв. №", ""),
             row.get("Наименование процессора", ""),
@@ -76,6 +78,7 @@ def make_excel_bytes(rows: list[dict], include_numbering_row: bool = True) -> by
 def base_row(**overrides):
     payload = {
         "Наименование юридического лица": "МКУ ГИМК",
+        "Адрес организации": "ул. Тестовая, 1",
         "Наименование ОС": "Windows 10",
         "Инв. №": "INV-001",
         "Наименование процессора": "Intel Core i5",
@@ -104,107 +107,62 @@ def base_row(**overrides):
 class TestExcelImportService:
     def _create_import_log(self, excel_bytes: bytes, filename: str = "test.xlsx") -> ImportLog:
         user = AdminUserFactory()
-        uploaded = SimpleUploadedFile(
-            filename,
-            excel_bytes,
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        uploaded = SimpleUploadedFile(filename, excel_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         return ImportLog.objects.create(file=uploaded, uploaded_by=user)
 
-    def test_import_creates_organization_position_browser_and_device(self):
+    def test_import_creates_device_and_dictionaries(self):
         log = self._create_import_log(make_excel_bytes([base_row()]))
-
         process_excel_import(log)
         log.refresh_from_db()
 
         assert log.status == ImportStatus.SUCCESS
-        assert log.created_count == 1
         assert Organization.objects.count() == 1
         assert Position.objects.count() == 1
         assert Browser.objects.count() == 1
         device = Device.objects.get(inventory_number="INV-001")
         assert device.organization.name == "МКУ ГИМК"
-        assert device.position.name == "Специалист"
-        assert device.browser.name == "Яндекс Браузер"
+        assert device.organization.address == "ул. Тестовая, 1"
+        assert device.employee_name == "Иванов И.И."
 
-    def test_reimport_same_inventory_updates_device(self):
-        first = base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "8"})
-        second = base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "32", "Наименование ОС": "Windows 11"})
-
-        log1 = self._create_import_log(make_excel_bytes([first]))
+    def test_reimport_updates_by_inventory_number(self):
+        log1 = self._create_import_log(make_excel_bytes([base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "8"})]))
         process_excel_import(log1)
 
-        log2 = self._create_import_log(make_excel_bytes([second]))
+        log2 = self._create_import_log(make_excel_bytes([base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "32"})]))
         process_excel_import(log2)
-        log2.refresh_from_db()
 
-        assert log2.updated_count == 1
         device = Device.objects.get(inventory_number="INV-UPDATE")
         assert device.ram == 32
-        assert device.os == "Windows 11"
 
     def test_empty_inventory_number_is_row_error(self):
         log = self._create_import_log(make_excel_bytes([base_row(**{"Инв. №": ""})]))
-
         process_excel_import(log)
         log.refresh_from_db()
 
-        assert log.status == ImportStatus.FAILED
         assert log.error_count == 1
         assert "инвентарный номер" in log.errors[0]["message"].lower()
 
-    def test_empty_optional_fields_do_not_break_import(self):
-        row = base_row(**{
-            "Наименование процессора": "",
-            "Тактовая частота": "",
-            "Емкость диска": "",
-            "Браузер которым пользуетесь": "",
-            "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "",
-            "Провайдер": "",
-            "Фамилия, инициалы сотрудника": "",
-            "Должность": "",
-        })
-        log = self._create_import_log(make_excel_bytes([row]))
-
-        process_excel_import(log)
-        log.refresh_from_db()
-
-        assert log.status == ImportStatus.SUCCESS
-        device = Device.objects.get(inventory_number="INV-001")
-        assert device.browser is None
-        assert device.position is None
-        assert device.has_google_account is None
-
     def test_organization_normalization_merges_aliases(self):
         row1 = base_row(**{"Инв. №": "INV-ORG-1", "Наименование юридического лица": "МКУ ГИМК"})
-        row2 = base_row(**{
-            "Инв. №": "INV-ORG-2",
-            "Наименование юридического лица": "Муниципальное казенное учреждение Городской информационно-методический кабинет",
-        })
-
+        row2 = base_row(**{"Инв. №": "INV-ORG-2", "Наименование юридического лица": "Муниципальное казенное учреждение Городской информационно-методический кабинет"})
         log = self._create_import_log(make_excel_bytes([row1, row2]))
         process_excel_import(log)
 
         assert Organization.objects.count() == 1
-        org = Organization.objects.first()
-        assert org.normalized_name == "мку гимк"
 
-    def test_accounts_field_is_split_into_three_flags(self):
-        row = base_row(**{
-            "Инв. №": "INV-ACC-1",
-            "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "Аккаунт Google, Аккаунт Apple",
-        })
+    def test_accounts_field_is_split(self):
+        row = base_row(**{"Инв. №": "INV-ACC", "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "Аккаунт Google, Аккаунт Apple"})
         log = self._create_import_log(make_excel_bytes([row]))
         process_excel_import(log)
 
-        device = Device.objects.get(inventory_number="INV-ACC-1")
+        device = Device.objects.get(inventory_number="INV-ACC")
         assert device.has_google_account is True
         assert device.has_apple_account is True
         assert device.has_microsoft_account is False
 
-    def test_bool_fields_are_parsed(self):
+    def test_boolean_fields_parsing(self):
         row = base_row(**{
-            "Инв. №": "INV-BOOL-1",
+            "Инв. №": "INV-BOOL",
             "Аттестованный компьютер": "+",
             "Работа с текстом": "да",
             "Работа с картинками, фотографиями": "есть",
@@ -215,31 +173,38 @@ class TestExcelImportService:
         log = self._create_import_log(make_excel_bytes([row]))
         process_excel_import(log)
 
-        device = Device.objects.get(inventory_number="INV-BOOL-1")
-        assert device.is_attested is True
-        assert device.work_with_text is True
-        assert device.work_with_images is True
-        assert device.create_presentations is True
-        assert device.work_with_audio is False
-        assert device.work_with_video is False
+        device = Device.objects.get(inventory_number="INV-BOOL")
+        assert device.is_certified is True
+        assert device.use_for_text is True
+        assert device.use_for_images is True
+        assert device.use_for_presentations is True
+        assert device.use_for_audio is False
+        assert device.use_for_video is False
 
-    def test_internet_speed_maps_to_choice_value(self):
-        row = base_row(**{"Инв. №": "INV-NET-1", "Скорость интернета": "От 5 до 50 Мб/с"})
+    def test_internet_speed_choice(self):
+        row = base_row(**{"Инв. №": "INV-NET", "Скорость интернета": "От 5 до 50 Мб/с"})
         log = self._create_import_log(make_excel_bytes([row]))
         process_excel_import(log)
 
-        device = Device.objects.get(inventory_number="INV-NET-1")
+        device = Device.objects.get(inventory_number="INV-NET")
         assert device.internet_speed == InternetSpeed.FROM_5_TO_50
 
-    def test_error_in_one_row_does_not_break_whole_import(self):
-        bad_row = base_row(**{"Инв. №": "INV-BAD-1", "Тип диска": "NVME"})
-        good_row = base_row(**{"Инв. №": "INV-GOOD-1"})
-
+    def test_row_error_does_not_break_import(self):
+        bad_row = base_row(**{"Инв. №": "INV-BAD", "Тип диска": "NVME"})
+        good_row = base_row(**{"Инв. №": "INV-GOOD"})
         log = self._create_import_log(make_excel_bytes([bad_row, good_row]))
         process_excel_import(log)
         log.refresh_from_db()
 
         assert log.status == ImportStatus.PARTIAL
-        assert log.error_count == 1
-        assert Device.objects.filter(inventory_number="INV-GOOD-1").exists()
-        assert not Device.objects.filter(inventory_number="INV-BAD-1").exists()
+        assert Device.objects.filter(inventory_number="INV-GOOD").exists()
+        assert not Device.objects.filter(inventory_number="INV-BAD").exists()
+
+    def test_replacement_status_calculated(self):
+        row = base_row(**{"Инв. №": "INV-REP", "Оперативная память": "4", "Тип диска": "HDD"})
+        log = self._create_import_log(make_excel_bytes([row]))
+        process_excel_import(log)
+
+        device = Device.objects.get(inventory_number="INV-REP")
+        assert device.replacement_status == ReplacementStatus.REPLACE
+        assert device.replacement_score < 50

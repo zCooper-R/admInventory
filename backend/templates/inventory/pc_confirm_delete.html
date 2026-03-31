@@ -1,66 +1,16 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
-{% block title %}Удаление ПК — IT Инвентарь{% endblock %}
+{% block title %}Удалить устройство{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-
-    <div class="page-header">
-      <h1 class="page-title text-danger">
-        <i class="bi bi-trash me-2"></i>Удаление компьютера
-      </h1>
-    </div>
-
-    <div class="card" style="border:2px solid #fee2e2;border-radius:12px;">
-      <div class="card-body p-4">
-
-        <div class="text-center mb-4">
-          <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center
-                      justify-content-center mb-3" style="width:64px;height:64px;">
-            <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
-          </div>
-          <p class="lead fw-semibold mb-1">Вы уверены?</p>
-          <p class="text-muted small">Это действие необратимо.</p>
-        </div>
-
-        <!-- PC details -->
-        <div class="rounded-3 p-3 mb-4" style="background:#fafafa;border:1px solid #e2e8f0;">
-          <dl class="row mb-0 small">
-            <dt class="col-5 text-muted fw-normal">Инв. номер</dt>
-            <dd class="col-7 fw-semibold mb-2">{{ pc.inventory_number }}</dd>
-
-            <dt class="col-5 text-muted fw-normal">Наименование</dt>
-            <dd class="col-7 mb-2">{{ pc.name }}</dd>
-
-            <dt class="col-5 text-muted fw-normal">Площадка</dt>
-            <dd class="col-7 mb-2">{{ pc.location }}</dd>
-
-            <dt class="col-5 text-muted fw-normal">Процессор</dt>
-            <dd class="col-7 mb-2">{{ pc.cpu|default:"—" }}</dd>
-
-            <dt class="col-5 text-muted fw-normal">Статус</dt>
-            <dd class="col-7 mb-0">
-              <span class="status-badge status-{{ pc.status }}">{{ pc.get_status_display }}</span>
-            </dd>
-          </dl>
-        </div>
-
-        <form method="post">
-          {% csrf_token %}
-          <div class="d-flex gap-3">
-            <a href="{% url 'pc-list' %}" class="btn btn-outline-secondary flex-grow-1">
-              <i class="bi bi-x-lg me-1"></i>Отмена
-            </a>
-            <button type="submit" class="btn btn-danger flex-grow-1">
-              <i class="bi bi-trash me-1"></i>Да, удалить
-            </button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-
-  </div>
+<div class="card card-body">
+  <h1 class="h5">Удаление устройства</h1>
+  <p>Инвентарный номер: <strong>{{ pc.inventory_number }}</strong></p>
+  <p>Организация: <strong>{{ pc.organization.name }}</strong></p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Удалить</button>
+    <a class="btn btn-outline-secondary" href="{% url 'pc-list' %}">Отмена</a>
+  </form>
 </div>
 {% endblock %}

@@ -1,81 +1,53 @@
-﻿"""Excel export service for PC devices."""
-
-import io
-import logging
+﻿import io
 
 import pandas as pd
 
 from apps.inventory.models import Device, DeviceType
 
-logger = logging.getLogger(__name__)
-
 
 def export_pcs_to_excel() -> bytes:
-    pcs = (
+    devices = (
         Device.objects.filter(device_type=DeviceType.PC)
-        .select_related("organization", "location__organization", "assigned_to")
-        .order_by("inventory_number")
+        .select_related("organization", "browser", "position")
+        .order_by("organization__name", "inventory_number")
     )
 
-    logger.info("Exporting %d PC records to Excel", pcs.count())
-
     rows = []
-    for pc in pcs:
+    for d in devices:
         rows.append(
             {
-                "inventory_number": pc.inventory_number,
-                "name": pc.name,
-                "cpu": pc.cpu or "",
-                "ram": pc.ram if pc.ram is not None else "",
-                "storage_type": pc.storage_type or "",
-                "storage_size": pc.storage_size if pc.storage_size is not None else "",
-                "os": pc.os or "",
-                "status": pc.get_status_display(),
-                "location": pc.location.name if pc.location else "",
-                "organization": pc.organization.name if pc.organization_id else "",
-                "assigned_to": str(pc.assigned_to) if pc.assigned_to else "",
+                "Инв. №": d.inventory_number,
+                "Организация": d.organization.name,
+                "Адрес организации": d.organization.address,
+                "Наименование ОС": d.os,
+                "Процессор": d.cpu_model,
+                "Тактовая частота": d.cpu_frequency,
+                "Оперативная память": d.ram,
+                "Тип диска": d.storage_type,
+                "Емкость диска": d.storage_size,
+                "Браузер": d.browser.name if d.browser else "",
+                "Google": d.has_google_account,
+                "Apple": d.has_apple_account,
+                "Microsoft": d.has_microsoft_account,
+                "Скорость интернета": d.get_internet_speed_display() if d.internet_speed else "",
+                "Провайдер": d.provider,
+                "Аттестованный": d.is_certified,
+                "Текст": d.use_for_text,
+                "Изображения": d.use_for_images,
+                "Презентации": d.use_for_presentations,
+                "Аудио": d.use_for_audio,
+                "Видео": d.use_for_video,
+                "Сотрудник": d.employee_name,
+                "Должность": d.position.name if d.position else "",
+                "Статус замены": d.get_replacement_status_display(),
+                "Оценка": d.replacement_score,
+                "Причины": d.replacement_reason,
             }
         )
 
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            "inventory_number",
-            "name",
-            "cpu",
-            "ram",
-            "storage_type",
-            "storage_size",
-            "os",
-            "status",
-            "location",
-            "organization",
-            "assigned_to",
-        ],
-    )
-
-    df.columns = [
-        "Инвентарный номер",
-        "Наименование",
-        "Процессор",
-        "ОЗУ (ГБ)",
-        "Тип диска",
-        "Емкость диска (ГБ)",
-        "Операционная система",
-        "Статус",
-        "Площадка",
-        "Организация",
-        "Назначен",
-    ]
-
+    df = pd.DataFrame(rows)
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Компьютеры")
-
-        ws = writer.sheets["Компьютеры"]
-        col_widths = [20, 20, 25, 10, 15, 22, 25, 12, 20, 25, 25]
-        for i, width in enumerate(col_widths, start=1):
-            ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = width
-
+        df.to_excel(writer, index=False, sheet_name="Устройства")
     buffer.seek(0)
     return buffer.read()
