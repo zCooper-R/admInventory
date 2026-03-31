@@ -1,8 +1,4 @@
 {% load inventory_tags %}
-{# Partial returned by HTMX for the PC list table.
-   On desktop: standard striped table.
-   On mobile (<768px): CSS transforms rows into cards via .pc-mobile-card-table.
-   Out-of-band swap updates the subtitle counter. #}
 
 <!-- OOB: update result count in the page subtitle -->
 <span id="result-count" hx-swap-oob="true">
