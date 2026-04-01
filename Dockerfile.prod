@@ -9,6 +9,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 django && \
@@ -20,10 +21,14 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY --chown=django:django backend/ .
 
-# Fix Windows line endings for both entrypoints
-COPY docker/entrypoint.prod.sh /entrypoint.sh
-RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh && chown django:django /entrypoint.sh
+RUN mkdir -p /app/docker
+COPY --chown=django:django docker/entrypoint.prod.sh /app/docker/entrypoint.sh
+COPY --chown=django:django docker/wait-for-postgres.sh /app/docker/wait-for-postgres.sh
+RUN sed -i 's/\r$//' /app/docker/entrypoint.sh /app/docker/wait-for-postgres.sh && \
+    chmod +x /app/docker/entrypoint.sh /app/docker/wait-for-postgres.sh
+
+USER django
 
 EXPOSE 8000
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
