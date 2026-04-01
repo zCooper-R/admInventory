@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.db.models import QuerySet
-from django.utils.html import format_html
 
-from .models import Browser, Device, Position, ReplacementStatus, SystemSettings
+from .models import Browser, Device, Position, SystemSettings
 
 
 @admin.register(Browser)
@@ -25,12 +24,12 @@ class PositionAdmin(admin.ModelAdmin):
 class DeviceAdmin(admin.ModelAdmin):
     list_display = (
         "inventory_number_link",
-        "organization",
+        "organization_short",
         "employee_name",
         "position",
         "os",
-        "hardware_badge",
-        "replacement_badge",
+        "hardware_summary",
+        "replacement_summary",
         "updated_at",
     )
     list_filter = (
@@ -134,34 +133,24 @@ class DeviceAdmin(admin.ModelAdmin):
 
     @admin.display(description="Инв. №")
     def inventory_number_link(self, obj: Device) -> str:
-        if not obj.inventory_number:
-            return "—"
-        return format_html(
-            '<strong style="color:#1d4ed8;">{}</strong>',
-            obj.inventory_number,
-        )
+        return obj.inventory_number or "—"
+
+    @admin.display(description="Организация", ordering="organization__name")
+    def organization_short(self, obj: Device) -> str:
+        name = obj.organization.name if obj.organization_id else "—"
+        if len(name) <= 42:
+            return name
+        return f"{name[:42]}..."
 
     @admin.display(description="Характеристики")
-    def hardware_badge(self, obj: Device) -> str:
+    def hardware_summary(self, obj: Device) -> str:
         ram = f"{obj.ram} ГБ" if obj.ram is not None else "—"
         disk_size = f"{obj.storage_size} ГБ" if obj.storage_size else "—"
         return f"{ram} / {obj.storage_type or '—'} {disk_size}"
 
     @admin.display(description="Статус замены")
-    def replacement_badge(self, obj: Device) -> str:
-        colors = {
-            ReplacementStatus.REPLACE: "#dc2626",
-            ReplacementStatus.ATTENTION: "#d97706",
-            ReplacementStatus.OK: "#16a34a",
-        }
-        color = colors.get(obj.replacement_status, "#6b7280")
-        return format_html(
-            '<span style="background:{};color:#fff;padding:3px 10px;border-radius:999px;'
-            'font-weight:600;">{} ({})</span>',
-            color,
-            obj.get_replacement_status_display(),
-            obj.replacement_score,
-        )
+    def replacement_summary(self, obj: Device) -> str:
+        return f"{obj.get_replacement_status_display()} ({obj.replacement_score})"
 
     @admin.action(description="Пересчитать статус замены для выбранных устройств")
     def recalculate_replacement_for_selected(
