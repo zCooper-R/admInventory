@@ -911,3 +911,20 @@ kbd {
   /* Prevent table rows from splitting across page breaks */
   tr { page-break-inside: avoid; }
 }
+
+/* Logs viewer */
+.log-output {
+  min-height: 420px;
+  max-height: 72vh;
+  overflow: auto;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: #0b1220;
+  color: #d9e2ef;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "Cascadia Mono", "Consolas", "SFMono-Regular", monospace;
+  font-size: .86rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -8,6 +8,9 @@ Import any view from this package directly:
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
+from apps.inventory.views.views_budget import budget_report
+from apps.inventory.views.views_import import pc_export, pc_import, pc_import_template
+from apps.inventory.views.views_logs import logs_download_view, logs_view
 from apps.inventory.views.views_pc import (
     critical_count_partial,
     dashboard,
@@ -19,8 +22,6 @@ from apps.inventory.views.views_pc import (
     pc_edit_modal,
     pc_list,
 )
-from apps.inventory.views.views_budget import budget_report
-from apps.inventory.views.views_import import pc_export, pc_import, pc_import_template
 from apps.inventory.views.views_settings import system_settings_view
 
 __all__ = [
@@ -42,4 +43,7 @@ __all__ = [
     "pc_import_template",
     # Settings
     "system_settings_view",
+    # Logs
+    "logs_view",
+    "logs_download_view",
 ]

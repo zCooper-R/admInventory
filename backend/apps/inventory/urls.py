@@ -6,9 +6,8 @@ All routes are included under the root prefix (see config/urls.py).
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
-from django.urls import path
-
 from apps.inventory import views
+from django.urls import path
 
 urlpatterns = [
     # Dashboard
@@ -37,4 +36,7 @@ urlpatterns = [
     path("pcs/budget/", views.budget_report, name="budget-report"),
     # System settings (admin only)
     path("settings/", views.system_settings_view, name="system-settings"),
+    # Logs viewer (admin only)
+    path("logs/", views.logs_view, name="logs-view"),
+    path("logs/download/", views.logs_download_view, name="logs-download"),
 ]

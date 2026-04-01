@@ -1,9 +1,10 @@
-﻿import pytest
+import pytest
+from apps.inventory.models import ReplacementStatus
 from django.test import Client
+from django.test.utils import override_settings
 from django.urls import reverse
 
-from apps.inventory.models import ReplacementStatus
-from .factories import AdminUserFactory, DeviceFactory, OrganizationFactory
+from .factories import AdminUserFactory, DeviceFactory, OrganizationFactory, UserFactory
 
 
 @pytest.fixture
@@ -122,3 +123,32 @@ class TestWebViews:
         body = response.content.decode("utf-8")
         assert "page-link-clickable" in body
         assert "page-link-disabled" in body
+
+    def test_logs_view_access_for_admin(self, client_auth, tmp_path):
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "app.log"
+        log_file.write_text(
+            "2026-04-01 10:00:00 | INFO     | apps.inventory.views | ok\n"
+            "2026-04-01 10:01:00 | ERROR    | apps.inventory.views | fail\n",
+            encoding="utf-8",
+        )
+
+        with override_settings(LOG_DIR=str(log_dir)):
+            response = client_auth.get(
+                reverse("logs-view"),
+                {"file": "app.log", "level": "ERROR", "q": "fail", "lines": 100},
+            )
+
+        assert response.status_code == 200
+        body = response.content.decode("utf-8")
+        assert "Логи приложения" in body
+        assert "ERROR" in body
+        assert "fail" in body
+
+    def test_logs_view_forbidden_for_non_admin(self, db):
+        c = Client()
+        c.force_login(UserFactory())
+        response = c.get(reverse("logs-view"))
+        assert response.status_code == 302
+        assert response.url == reverse("dashboard")

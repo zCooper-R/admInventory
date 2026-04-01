@@ -88,6 +88,12 @@
           <i class="bi bi-sliders"></i><span>Настройки</span>
         </a>
       </li>
+      <li>
+        <a href="{% url 'logs-view' %}"
+           class="sidebar-link {% if nav_active == 'logs' %}active{% endif %}">
+          <i class="bi bi-journal-text"></i><span>Логи</span>
+        </a>
+      </li>
       {% endif %}
       <li>
         <a href="/admin/" class="sidebar-link" target="_blank">

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Логи приложения — {{ site_settings.system_title|default:"IT Инвентарь" }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Логи</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1"><i class="bi bi-journal-text me-2 text-primary"></i>Логи приложения</h1>
+    <p class="text-muted mb-0">Просмотр логов без входа в контейнер. Доступно только администраторам.</p>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-lg-4">
+        <label class="form-label fw-medium">Файл</label>
+        <select class="form-select" name="file">
+          {% for item in log_files %}
+          <option value="{{ item.name }}" {% if selected_file_name == item.name %}selected{% endif %}>
+            {{ item.name }}
+          </option>
+          {% empty %}
+          <option value="">Нет доступных файлов</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-2">
+        <label class="form-label fw-medium">Последних строк</label>
+        <select class="form-select" name="lines">
+          <option value="100" {% if selected_lines == 100 %}selected{% endif %}>100</option>
+          <option value="200" {% if selected_lines == 200 %}selected{% endif %}>200</option>
+          <option value="500" {% if selected_lines == 500 %}selected{% endif %}>500</option>
+          <option value="1000" {% if selected_lines == 1000 %}selected{% endif %}>1000</option>
+          <option value="2000" {% if selected_lines == 2000 %}selected{% endif %}>2000</option>
+        </select>
+      </div>
+
+      <div class="col-lg-2">
+        <label class="form-label fw-medium">Уровень</label>
+        <select class="form-select" name="level">
+          <option value="">Все</option>
+          {% for value in allowed_levels %}
+          <option value="{{ value }}" {% if selected_level == value %}selected{% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3">
+        <label class="form-label fw-medium">Поиск</label>
+        <input type="text" class="form-control" name="q" value="{{ query }}" placeholder="Текст, user, path, ошибка...">
+      </div>
+
+      <div class="col-lg-1 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Показать</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div class="fw-semibold">
+      <i class="bi bi-file-earmark-text me-2 text-info"></i>
+      {% if selected_file_name %}{{ selected_file_name }}{% else %}Лог не выбран{% endif %}
+    </div>
+    <div class="d-flex gap-2">
+      {% if selected_file_name %}
+      <a class="btn btn-sm btn-outline-secondary"
+         href="{% url 'logs-download' %}?file={{ selected_file_name|urlencode }}">
+        <i class="bi bi-download me-1"></i>Скачать
+      </a>
+      {% endif %}
+      <a class="btn btn-sm btn-outline-primary"
+         href="{% url 'logs-view' %}?file={{ selected_file_name|urlencode }}&lines={{ selected_lines }}&level={{ selected_level|urlencode }}&q={{ query|urlencode }}">
+        <i class="bi bi-arrow-repeat me-1"></i>Обновить
+      </a>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <pre class="log-output mb-0">{% if rendered_lines %}{% for line in rendered_lines %}{{ line }}
+{% endfor %}{% else %}Нет записей по выбранным фильтрам.{% endif %}</pre>
+  </div>
+</div>
+{% endblock %}
