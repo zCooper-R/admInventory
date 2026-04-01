@@ -29,10 +29,12 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
+      LOG_DIR: /var/log/app
     volumes:
       - ./backend:/app
       - media_volume:/app/media
       - static_volume:/app/staticfiles
+      - logs_volume:/var/log/app
     ports:
       - "8000:8000"
     depends_on:
@@ -43,3 +45,4 @@ volumes:
   postgres_data:
   media_volume:
   static_volume:
+  logs_volume:

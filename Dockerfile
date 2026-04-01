@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Dedicated logs directory outside bind-mounted /app for stable file permissions.
+RUN mkdir -p /var/log/app && chmod 0777 /var/log/app
+
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 

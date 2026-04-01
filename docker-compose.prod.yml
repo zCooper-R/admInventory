@@ -32,9 +32,11 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.prod
       GUNICORN_WORKERS: "4"
+      LOG_DIR: /var/log/app
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - logs_volume:/var/log/app
     expose:
       - "8000"
     depends_on:
@@ -58,3 +60,4 @@ volumes:
   postgres_data:
   static_volume:
   media_volume:
+  logs_volume:

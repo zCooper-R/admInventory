@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+LOG_DIR=${LOG_DIR:-/var/log/app}
+echo "Preparing log directory: ${LOG_DIR}"
+mkdir -p "${LOG_DIR}"
+chmod -R 0777 "${LOG_DIR}" || true
+touch "${LOG_DIR}/.write_test" && rm -f "${LOG_DIR}/.write_test" || true
+
 echo "Waiting for database..."
 until python -c "
 import os, psycopg2
