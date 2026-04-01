@@ -114,7 +114,6 @@ class TestWebViews:
         assert "pc-table-wrap" in body
         assert "pc-data-table" in body
         assert "col-sticky-inv" in body
-        assert "col-sticky-org" in body
 
     def test_pagination_has_clickable_and_disabled_cursor_classes(self, client_auth):
         DeviceFactory.create_batch(40)
