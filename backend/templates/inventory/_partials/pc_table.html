@@ -28,7 +28,7 @@
           <tr id="pc-row-{{ pc.pk }}">
             <td class="ps-3 col-inv col-sticky-inv">
               <a href="#"
-                 class="fw-semibold text-primary small text-decoration-none"
+                 class="fw-semibold text-primary small text-decoration-none cell-inventory-link"
                  hx-get="{% url 'pc-edit-modal' pc.pk %}"
                  hx-target="#modal-container"
                  hx-swap="innerHTML">{{ pc.inventory_number|default:'—' }}</a>
@@ -38,15 +38,15 @@
               </div>
               <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">{{ pc.employee_name|default:'—' }}</div>
             </td>
-            <td class="col-sticky-org text-truncate-cell" title="{{ pc.organization.name }}">{{ pc.organization.name }}</td>
+            <td class="col-sticky-org cell-org" title="{{ pc.organization.name }}">{{ pc.organization.name }}</td>
             <td class="d-none d-lg-table-cell">{{ pc.os|default:'—' }}</td>
-            <td class="d-none d-lg-table-cell text-muted small text-truncate-cell" title="{{ pc.cpu_model|default:'—' }}">{{ pc.cpu_model|default:'—'|truncatechars:36 }}</td>
+            <td class="d-none d-lg-table-cell text-muted small cell-cpu" title="{{ pc.cpu_model|default:'—' }}">{{ pc.cpu_model|default:'—' }}</td>
             <td class="d-none d-xl-table-cell">{{ pc.cpu_frequency|default:'—' }}</td>
             <td class="d-none d-md-table-cell">{% if pc.ram %}<span class="badge bg-light text-dark border">{{ pc.ram }} ГБ</span>{% else %}—{% endif %}</td>
             <td class="d-none d-lg-table-cell">{{ pc.storage_type|default:'—' }}</td>
             <td class="d-none d-xl-table-cell">{{ pc.storage_size|default:'—' }}</td>
-            <td class="text-truncate-cell" title="{{ pc.employee_name|default:'—' }}">{{ pc.employee_name|default:'—' }}</td>
-            <td class="d-none d-xl-table-cell text-truncate-cell" title="{{ pc.position.name|default:'—' }}">{{ pc.position.name|default:'—' }}</td>
+            <td class="cell-employee" title="{{ pc.employee_name|default:'—' }}">{{ pc.employee_name|default:'—' }}</td>
+            <td class="d-none d-xl-table-cell cell-position" title="{{ pc.position.name|default:'—' }}">{{ pc.position.name|default:'—' }}</td>
             <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
             <td class="d-none d-lg-table-cell">{{ pc.replacement_score }}</td>
             <td class="pe-3 text-end">

@@ -436,18 +436,18 @@ body {
     position: sticky;
     left: 0;
     z-index: 3;
-    min-width: 175px;
-    max-width: 175px;
+    min-width: 190px;
+    max-width: 190px;
     background: var(--card-bg) !important;
     box-shadow: 1px 0 0 var(--border-clr);
   }
 
   .pc-data-table .col-sticky-org {
     position: sticky;
-    left: 175px;
+    left: 190px;
     z-index: 2;
-    min-width: 230px;
-    max-width: 230px;
+    min-width: 280px;
+    max-width: 280px;
     background: var(--card-bg) !important;
     box-shadow: 1px 0 0 var(--border-clr);
   }
@@ -458,6 +458,33 @@ body {
     background: var(--thead-bg) !important;
   }
 }
+
+.cell-inventory-link {
+  display: inline-block;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-org,
+.cell-cpu,
+.cell-employee,
+.cell-position {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.35;
+  max-height: 2.7em;
+}
+
+.cell-org { max-width: 260px; font-weight: 600; }
+.cell-cpu { max-width: 210px; color: var(--text-muted); }
+.cell-employee { max-width: 180px; }
+.cell-position { max-width: 190px; }
 
 /* Density modes */
 [data-density="compact"]     .table > :not(caption) > * > * { padding: .3rem .75rem; }
