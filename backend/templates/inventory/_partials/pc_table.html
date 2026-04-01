@@ -16,12 +16,8 @@
             <th class="d-none d-md-table-cell"><a class="sort-link" hx-get="{% sort_url 'ram' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">ОЗУ{% if sort == 'ram' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'storage_type' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Тип диска{% if sort == 'storage_type' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'storage_size' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Объём{% if sort == 'storage_size' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'browser__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Браузер{% if sort == 'browser__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th><a class="sort-link" hx-get="{% sort_url 'employee_name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Сотрудник{% if sort == 'employee_name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'position__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Должность{% if sort == 'position__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'provider' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Провайдер{% if sort == 'provider' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="d-none d-xxl-table-cell"><a class="sort-link" hx-get="{% sort_url 'internet_speed' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Интернет{% if sort == 'internet_speed' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="d-none d-xxl-table-cell"><a class="sort-link" hx-get="{% sort_url 'is_certified' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Аттестован{% if sort == 'is_certified' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th><a class="sort-link" hx-get="{% sort_url 'replacement_status' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Статус замены{% if sort == 'replacement_status' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'replacement_score' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Балл{% if sort == 'replacement_score' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="pe-3 text-end">Действия</th>
@@ -31,7 +27,11 @@
           {% for pc in pcs %}
           <tr id="pc-row-{{ pc.pk }}">
             <td class="ps-3 col-inv col-sticky-inv">
-              <div class="fw-semibold text-primary small">{{ pc.inventory_number|default:'—' }}</div>
+              <a href="#"
+                 class="fw-semibold text-primary small text-decoration-none"
+                 hx-get="{% url 'pc-edit-modal' pc.pk %}"
+                 hx-target="#modal-container"
+                 hx-swap="innerHTML">{{ pc.inventory_number|default:'—' }}</a>
               <div class="d-md-none mt-1">
                 <span class="fw-medium">{{ pc.organization.name }}</span>
                 <span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %} ms-2">{{ pc.get_replacement_status_display }}</span>
@@ -45,12 +45,8 @@
             <td class="d-none d-md-table-cell">{% if pc.ram %}<span class="badge bg-light text-dark border">{{ pc.ram }} ГБ</span>{% else %}—{% endif %}</td>
             <td class="d-none d-lg-table-cell">{{ pc.storage_type|default:'—' }}</td>
             <td class="d-none d-xl-table-cell">{{ pc.storage_size|default:'—' }}</td>
-            <td class="d-none d-xl-table-cell">{{ pc.browser.name|default:'—' }}</td>
             <td class="text-truncate-cell" title="{{ pc.employee_name|default:'—' }}">{{ pc.employee_name|default:'—' }}</td>
             <td class="d-none d-xl-table-cell text-truncate-cell" title="{{ pc.position.name|default:'—' }}">{{ pc.position.name|default:'—' }}</td>
-            <td class="d-none d-xl-table-cell text-truncate-cell" title="{{ pc.provider|default:'—' }}">{{ pc.provider|default:'—' }}</td>
-            <td class="d-none d-xxl-table-cell">{{ pc.get_internet_speed_display|default:'—' }}</td>
-            <td class="d-none d-xxl-table-cell">{% if pc.is_certified is True %}Да{% elif pc.is_certified is False %}Нет{% else %}—{% endif %}</td>
             <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
             <td class="d-none d-lg-table-cell">{{ pc.replacement_score }}</td>
             <td class="pe-3 text-end">
@@ -61,7 +57,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="19" class="text-center py-5"><i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i><span class="text-muted">Устройства не найдены</span></td></tr>
+          <tr><td colspan="13" class="text-center py-5"><i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i><span class="text-muted">Устройства не найдены</span></td></tr>
           {% endfor %}
         </tbody>
       </table>
