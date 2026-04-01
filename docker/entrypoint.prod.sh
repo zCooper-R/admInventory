@@ -2,7 +2,7 @@
 # Production entrypoint — uses Gunicorn instead of runserver.
 set -e
 
-LOG_DIR=${LOG_DIR:-/var/log/app}
+LOG_DIR=${LOG_DIR:-/app/logs}
 echo "Preparing log directory: ${LOG_DIR}"
 mkdir -p "${LOG_DIR}"
 chmod -R 0777 "${LOG_DIR}" || true
