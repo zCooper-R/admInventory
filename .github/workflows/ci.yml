@@ -77,9 +77,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Check for missing migrations
+      - name: Check for missing model migrations
         working-directory: backend
-        run: python manage.py migrate --check
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Apply migrations
+        working-directory: backend
+        run: python manage.py migrate --noinput
 
       - name: Run pytest
         working-directory: backend
