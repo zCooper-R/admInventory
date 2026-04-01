@@ -1,5 +1,3 @@
-
-
 services:
   db:
     image: postgres:16-alpine
@@ -30,9 +28,10 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
       LOG_DIR: /app/logs
-    user: "0:0"
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
     volumes:
-      - ./backend:/app
+      - ./backend:/app:rw
       - ./logs:/app/logs
       - media_volume:/app/media
       - static_volume:/app/staticfiles
