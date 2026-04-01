@@ -31,24 +31,3 @@ class Organization(models.Model):
     def save(self, *args, **kwargs):
         self.normalized_name = normalize_organization_name(self.name)
         super().save(*args, **kwargs)
-
-
-class Location(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Название площадки")
-    address = models.TextField(verbose_name="Адрес", blank=True)
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.PROTECT,
-        related_name="locations",
-        verbose_name="Организация",
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
-
-    class Meta:
-        verbose_name = "Площадка"
-        verbose_name_plural = "Площадки"
-        ordering = ["organization", "name"]
-        unique_together = ("name", "organization")
-
-    def __str__(self) -> str:
-        return f"{self.organization.name} — {self.name}"

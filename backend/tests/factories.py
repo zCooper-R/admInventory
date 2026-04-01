@@ -1,6 +1,6 @@
-﻿import factory
+import factory
 from apps.inventory.models import Device, DeviceType, ReplacementStatus, StorageType
-from apps.locations.models import Location, Organization
+from apps.locations.models import Organization
 from apps.users.models import User, UserRole
 from factory.django import DjangoModelFactory
 
@@ -29,15 +29,6 @@ class OrganizationFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Организация {n}")
     normalized_name = factory.LazyAttribute(lambda obj: obj.name.lower())
     address = factory.Faker("address", locale="ru_RU")
-
-
-class LocationFactory(DjangoModelFactory):
-    class Meta:
-        model = Location
-
-    name = factory.Sequence(lambda n: f"Площадка {n}")
-    address = factory.Faker("address", locale="ru_RU")
-    organization = factory.SubFactory(OrganizationFactory)
 
 
 class DeviceFactory(DjangoModelFactory):

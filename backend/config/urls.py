@@ -11,10 +11,6 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
 
-admin.site.site_header = "Админ-панель IT Инвентарь"
-admin.site.site_title = "IT Инвентарь Admin"
-admin.site.index_title = "Управление системой"
-
 
 def api_version(request):
     """GET /api/version/ — returns current application version as JSON."""

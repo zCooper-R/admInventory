@@ -25,15 +25,6 @@ class User(AbstractUser):
         verbose_name="Роль",
         db_index=True,
     )
-    location = models.ForeignKey(
-        "locations.Location",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="responsible_users",
-        verbose_name="Площадка (для менеджеров)",
-        help_text="Если задана — менеджер видит только ПК этой площадки.",
-    )
 
     class Meta:
         verbose_name = "Пользователь"
