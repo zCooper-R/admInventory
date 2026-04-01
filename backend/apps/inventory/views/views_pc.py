@@ -6,6 +6,7 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.http import HttpResponse
 from django.db.models import Count, F, Q, Value
 from django.db.models.functions import Coalesce, Lower
 from django.shortcuts import get_object_or_404, redirect, render
@@ -251,7 +252,8 @@ def pc_delete(request, pk: int):
     return render(request, "inventory/pc_confirm_delete.html", {"nav_active": "computers", "pc": pc})
 
 
-@login_required
 def critical_count_partial(request):
+    if not request.user.is_authenticated:
+        return HttpResponse(status=204)
     crit = Device.objects.filter(device_type=DeviceType.PC, replacement_status=ReplacementStatus.REPLACE).count()
     return render(request, "inventory/_partials/critical_badge.html", {"crit": crit})
