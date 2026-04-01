@@ -4,12 +4,28 @@ Root URL configuration.
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
+from apps.inventory.models import SystemSettings
 from config.version import APP_NAME, RELEASE_DATE, VERSION
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
+
+
+def apply_admin_branding() -> None:
+    admin.site.site_title = "IT Инвентарь Admin"
+    try:
+        cfg = SystemSettings.get()
+        admin.site.site_header = cfg.system_title or "IT Инвентарь"
+        admin.site.index_title = cfg.system_subtitle or "Управление системой"
+    except Exception:
+        # During early startup/migrations DB can be unavailable.
+        admin.site.site_header = "IT Инвентарь"
+        admin.site.index_title = "Управление системой"
+
+
+apply_admin_branding()
 
 
 def api_version(request):

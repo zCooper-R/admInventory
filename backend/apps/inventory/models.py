@@ -334,3 +334,11 @@ class SystemSettings(models.Model):
 
         super().save(*args, **kwargs)
         cache.delete(self._CACHE_KEY)
+        try:
+            from django.contrib import admin
+
+            admin.site.site_title = "IT Инвентарь Admin"
+            admin.site.site_header = self.system_title or "IT Инвентарь"
+            admin.site.index_title = self.system_subtitle or "Управление системой"
+        except Exception:
+            pass
