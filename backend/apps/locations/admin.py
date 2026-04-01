@@ -11,7 +11,13 @@ class LocationInline(admin.TabularInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name", "normalized_name", "address", "location_count", "created_at")
+    list_display = (
+        "name",
+        "normalized_name",
+        "address",
+        "location_count",
+        "created_at",
+    )
     search_fields = ("name", "normalized_name")
     inlines = [LocationInline]
 

@@ -3,6 +3,7 @@ System settings view.
 
 Accessible only to superusers and users with ``role=admin``.
 """
+
 from __future__ import annotations
 
 import logging
@@ -32,7 +33,10 @@ def system_settings_view(request):
         form = SystemSettingsForm(request.POST, instance=instance)
         if form.is_valid():
             changed_fields = {
-                field: {"old": form.initial.get(field), "new": form.cleaned_data.get(field)}
+                field: {
+                    "old": form.initial.get(field),
+                    "new": form.cleaned_data.get(field),
+                }
                 for field in form.changed_data
             }
             form.save()
@@ -45,11 +49,16 @@ def system_settings_view(request):
                 audit_logger.info(
                     "Изменены параметры replacement/system: %s",
                     changed_fields,
-                    extra={"user": request.user.username, "action": "system_settings_update"},
+                    extra={
+                        "user": request.user.username,
+                        "action": "system_settings_update",
+                    },
                 )
             messages.success(request, "Настройки успешно сохранены.")
             return redirect("system-settings")
-        web_logger.warning("Ошибка валидации системных настроек: user=%s", request.user.username)
+        web_logger.warning(
+            "Ошибка валидации системных настроек: user=%s", request.user.username
+        )
     else:
         form = SystemSettingsForm(instance=instance)
 

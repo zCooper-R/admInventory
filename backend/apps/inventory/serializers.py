@@ -4,10 +4,14 @@ from .models import Device
 
 
 class DeviceListSerializer(serializers.ModelSerializer):
-    organization_name = serializers.CharField(source="organization.name", read_only=True)
+    organization_name = serializers.CharField(
+        source="organization.name", read_only=True
+    )
     position_name = serializers.CharField(source="position.name", read_only=True)
     browser_name = serializers.CharField(source="browser.name", read_only=True)
-    replacement_status_display = serializers.CharField(source="get_replacement_status_display", read_only=True)
+    replacement_status_display = serializers.CharField(
+        source="get_replacement_status_display", read_only=True
+    )
 
     class Meta:
         model = Device
@@ -29,7 +33,9 @@ class DeviceListSerializer(serializers.ModelSerializer):
 
 
 class DeviceDetailSerializer(serializers.ModelSerializer):
-    organization_name = serializers.CharField(source="organization.name", read_only=True)
+    organization_name = serializers.CharField(
+        source="organization.name", read_only=True
+    )
     position_name = serializers.CharField(source="position.name", read_only=True)
     browser_name = serializers.CharField(source="browser.name", read_only=True)
 
@@ -70,7 +76,13 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("replacement_status", "replacement_score", "replacement_reason", "created_at", "updated_at")
+        read_only_fields = (
+            "replacement_status",
+            "replacement_score",
+            "replacement_reason",
+            "created_at",
+            "updated_at",
+        )
 
     def validate_inventory_number(self, value):
         inventory_number = (value or "").strip()
@@ -81,5 +93,7 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
-            raise serializers.ValidationError("Устройство с таким инвентарным номером уже существует.")
+            raise serializers.ValidationError(
+                "Устройство с таким инвентарным номером уже существует."
+            )
         return inventory_number

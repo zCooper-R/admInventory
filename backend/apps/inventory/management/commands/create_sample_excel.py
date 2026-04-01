@@ -12,11 +12,15 @@ Usage::
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from apps.inventory.services.template_excel import SAMPLE_ROWS, build_import_template_bytes
+from apps.inventory.services.template_excel import (
+    SAMPLE_ROWS,
+    build_import_template_bytes,
+)
 
 
 class Command(BaseCommand):
@@ -36,8 +40,8 @@ class Command(BaseCommand):
         if output:
             dest = Path(output)
         else:
-            commands_dir = Path(__file__).resolve().parent   # .../commands/
-            backend_dir  = commands_dir.parents[3]            # backend/
+            commands_dir = Path(__file__).resolve().parent  # .../commands/
+            backend_dir = commands_dir.parents[3]  # backend/
             dest = backend_dir / "fixtures" / "sample_import.xlsx"
 
         dest.parent.mkdir(parents=True, exist_ok=True)

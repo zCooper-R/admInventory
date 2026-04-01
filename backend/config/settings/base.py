@@ -81,7 +81,9 @@ DATABASES = {
 AUTH_USER_MODEL = "users.User"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -107,6 +109,7 @@ LOGIN_REDIRECT_URL = "/"
 AGENT_API_KEY = env("AGENT_API_KEY", default="change-me-before-production")
 
 from django.contrib.messages import constants as message_constants  # noqa: E402
+
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
 
 REST_FRAMEWORK = {

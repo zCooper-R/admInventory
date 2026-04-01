@@ -41,7 +41,9 @@ def _apply_sorting(qs, sort: str, direction: str):
         "updated_at": F("updated_at"),
     }
     expr = sort_map.get(sort, sort_map["inventory_number"])
-    order_expr = expr.desc(nulls_last=True) if direction == "desc" else expr.asc(nulls_last=True)
+    order_expr = (
+        expr.desc(nulls_last=True) if direction == "desc" else expr.asc(nulls_last=True)
+    )
     return qs.order_by(order_expr, "id")
 
 
@@ -58,7 +60,11 @@ def dashboard(request):
         "data": [ok_count, attention_count, replace_count],
         "colors": ["#16a34a", "#d97706", "#dc2626"],
     }
-    org_qs = qs.values("organization__name").annotate(count=Count("id")).order_by("-count")[:12]
+    org_qs = (
+        qs.values("organization__name")
+        .annotate(count=Count("id"))
+        .order_by("-count")[:12]
+    )
     org_chart = {
         "labels": [i["organization__name"] for i in org_qs],
         "data": [i["count"] for i in org_qs],
@@ -163,7 +169,13 @@ def pc_list(request):
 
 
 def _modal_ctx(form, title: str, action_url: str, is_create: bool, pc=None) -> dict:
-    return {"form": form, "title": title, "is_create": is_create, "action_url": action_url, **({"pc": pc} if pc else {})}
+    return {
+        "form": form,
+        "title": title,
+        "is_create": is_create,
+        "action_url": action_url,
+        **({"pc": pc} if pc else {}),
+    }
 
 
 @login_required
@@ -175,10 +187,24 @@ def pc_create_modal(request):
             pc = form.save(commit=False)
             pc.device_type = DeviceType.PC
             pc.save()
-            logger.info("Создано устройство через модалку: user=%s inventory=%s", request.user.username, pc.inventory_number)
-            return htmx_close_and_refresh(f"Устройство [{pc.inventory_number}] создано.")
-        return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(form, "Добавить устройство", action_url, True))
-    return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(PCForm(), "Добавить устройство", action_url, True))
+            logger.info(
+                "Создано устройство через модалку: user=%s inventory=%s",
+                request.user.username,
+                pc.inventory_number,
+            )
+            return htmx_close_and_refresh(
+                f"Устройство [{pc.inventory_number}] создано."
+            )
+        return render(
+            request,
+            "inventory/_partials/pc_form_modal.html",
+            _modal_ctx(form, "Добавить устройство", action_url, True),
+        )
+    return render(
+        request,
+        "inventory/_partials/pc_form_modal.html",
+        _modal_ctx(PCForm(), "Добавить устройство", action_url, True),
+    )
 
 
 @login_required
@@ -191,11 +217,25 @@ def pc_edit_modal(request, pk: int):
         form = PCForm(request.POST, instance=pc)
         if form.is_valid():
             form.save()
-            logger.info("Обновлено устройство через модалку: user=%s inventory=%s", request.user.username, pc.inventory_number)
-            return htmx_close_and_refresh(f"Устройство [{pc.inventory_number}] обновлено.")
-        return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(form, title, action_url, False, pc))
+            logger.info(
+                "Обновлено устройство через модалку: user=%s inventory=%s",
+                request.user.username,
+                pc.inventory_number,
+            )
+            return htmx_close_and_refresh(
+                f"Устройство [{pc.inventory_number}] обновлено."
+            )
+        return render(
+            request,
+            "inventory/_partials/pc_form_modal.html",
+            _modal_ctx(form, title, action_url, False, pc),
+        )
 
-    return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(PCForm(instance=pc), title, action_url, False, pc))
+    return render(
+        request,
+        "inventory/_partials/pc_form_modal.html",
+        _modal_ctx(PCForm(instance=pc), title, action_url, False, pc),
+    )
 
 
 @login_required
@@ -204,7 +244,11 @@ def pc_delete_modal(request, pk: int):
     if request.method == "POST":
         inv = pc.inventory_number
         pc.delete()
-        logger.info("Удалено устройство через модалку: user=%s inventory=%s", request.user.username, inv)
+        logger.info(
+            "Удалено устройство через модалку: user=%s inventory=%s",
+            request.user.username,
+            inv,
+        )
         return htmx_close_and_refresh(f"Устройство [{inv}] удалено.", event="pcDeleted")
     return render(request, "inventory/_partials/pc_delete_modal.html", {"pc": pc})
 
@@ -217,12 +261,25 @@ def pc_create(request):
             pc = form.save(commit=False)
             pc.device_type = DeviceType.PC
             pc.save()
-            logger.info("Создано устройство: user=%s inventory=%s", request.user.username, pc.inventory_number)
+            logger.info(
+                "Создано устройство: user=%s inventory=%s",
+                request.user.username,
+                pc.inventory_number,
+            )
             messages.success(request, f"Устройство [{pc.inventory_number}] создано.")
             return redirect("pc-list")
     else:
         form = PCForm()
-    return render(request, "inventory/pc_form.html", {"nav_active": "computers", "form": form, "title": "Добавить устройство", "is_create": True})
+    return render(
+        request,
+        "inventory/pc_form.html",
+        {
+            "nav_active": "computers",
+            "form": form,
+            "title": "Добавить устройство",
+            "is_create": True,
+        },
+    )
 
 
 @login_required
@@ -232,12 +289,26 @@ def pc_edit(request, pk: int):
         form = PCForm(request.POST, instance=pc)
         if form.is_valid():
             form.save()
-            logger.info("Обновлено устройство: user=%s inventory=%s", request.user.username, pc.inventory_number)
+            logger.info(
+                "Обновлено устройство: user=%s inventory=%s",
+                request.user.username,
+                pc.inventory_number,
+            )
             messages.success(request, f"Устройство [{pc.inventory_number}] обновлено.")
             return redirect("pc-list")
     else:
         form = PCForm(instance=pc)
-    return render(request, "inventory/pc_form.html", {"nav_active": "computers", "form": form, "pc": pc, "title": f"Редактировать: {pc.inventory_number}", "is_create": False})
+    return render(
+        request,
+        "inventory/pc_form.html",
+        {
+            "nav_active": "computers",
+            "form": form,
+            "pc": pc,
+            "title": f"Редактировать: {pc.inventory_number}",
+            "is_create": False,
+        },
+    )
 
 
 @login_required
@@ -246,14 +317,22 @@ def pc_delete(request, pk: int):
     if request.method == "POST":
         inv = pc.inventory_number
         pc.delete()
-        logger.info("Удалено устройство: user=%s inventory=%s", request.user.username, inv)
+        logger.info(
+            "Удалено устройство: user=%s inventory=%s", request.user.username, inv
+        )
         messages.success(request, f"Устройство [{inv}] удалено.")
         return redirect("pc-list")
-    return render(request, "inventory/pc_confirm_delete.html", {"nav_active": "computers", "pc": pc})
+    return render(
+        request,
+        "inventory/pc_confirm_delete.html",
+        {"nav_active": "computers", "pc": pc},
+    )
 
 
 def critical_count_partial(request):
     if not request.user.is_authenticated:
         return HttpResponse(status=204)
-    crit = Device.objects.filter(device_type=DeviceType.PC, replacement_status=ReplacementStatus.REPLACE).count()
+    crit = Device.objects.filter(
+        device_type=DeviceType.PC, replacement_status=ReplacementStatus.REPLACE
+    ).count()
     return render(request, "inventory/_partials/critical_badge.html", {"crit": crit})

@@ -12,12 +12,14 @@ Available tags / filters
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 from django import template
 
 register = template.Library()
 
 
 # ── Filters ────────────────────────────────────────────────────────────────────
+
 
 @register.filter
 def rubles(value):
@@ -38,6 +40,7 @@ def abs_value(value):
 
 
 # ── URL helpers ────────────────────────────────────────────────────────────────
+
 
 @register.simple_tag(takes_context=True)
 def query_url(context, **kwargs):
@@ -101,6 +104,7 @@ def sort_icon(context, field):
 
 # ── Dashboard / Topbar helpers ─────────────────────────────────────────────────
 
+
 @register.simple_tag
 def critical_pc_count():
     """
@@ -109,6 +113,7 @@ def critical_pc_count():
     """
     try:
         from apps.inventory.models import Device, DeviceType, ReplacementStatus
+
         return Device.objects.filter(
             device_type=DeviceType.PC,
             replacement_status=ReplacementStatus.REPLACE,

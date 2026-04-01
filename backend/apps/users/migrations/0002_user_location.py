@@ -7,14 +7,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('locations', '0001_initial'),
-        ('users', '0001_initial'),
+        ("locations", "0001_initial"),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='location',
-            field=models.ForeignKey(blank=True, help_text='Если задана — менеджер видит только ПК этой площадки.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='responsible_users', to='locations.location', verbose_name='Площадка (для менеджеров)'),
+            model_name="user",
+            name="location",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Если задана — менеджер видит только ПК этой площадки.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="responsible_users",
+                to="locations.location",
+                verbose_name="Площадка (для менеджеров)",
+            ),
         ),
     ]

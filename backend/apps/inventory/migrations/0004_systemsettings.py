@@ -6,6 +6,7 @@ branding) that can be edited from the web UI without a server restart.
 Only one row (pk=1) is ever used; it is created on first access via
 SystemSettings.get().
 """
+
 from django.db import migrations, models
 
 
@@ -19,7 +20,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="SystemSettings",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 (
                     "pc_min_ram_gb",
                     models.PositiveIntegerField(

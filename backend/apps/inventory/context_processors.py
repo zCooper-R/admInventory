@@ -11,6 +11,7 @@ APP_VERSION    — current application version string (e.g. "0.1.0")
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 from __future__ import annotations
 
 import logging
@@ -37,11 +38,13 @@ def site_settings(request):
     ctx = {"APP_VERSION": VERSION}
     try:
         from apps.inventory.models import SystemSettings
+
         ctx["site_settings"] = SystemSettings.get()
     except Exception as exc:
         logger.debug("site_settings context processor fallback: %s", exc)
         try:
             from apps.inventory.models import SystemSettings
+
             ctx["site_settings"] = SystemSettings()
         except Exception:
             ctx["site_settings"] = None

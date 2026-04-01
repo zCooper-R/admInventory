@@ -33,7 +33,9 @@ class ReplacementStatus(models.TextChoices):
 
 class Browser(models.Model):
     name = models.CharField(max_length=120, unique=True, verbose_name="Браузер")
-    normalized_name = models.CharField(max_length=120, unique=True, db_index=True, verbose_name="Нормализованное имя")
+    normalized_name = models.CharField(
+        max_length=120, unique=True, db_index=True, verbose_name="Нормализованное имя"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -51,7 +53,9 @@ class Browser(models.Model):
 
 class Position(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name="Должность")
-    normalized_name = models.CharField(max_length=255, unique=True, db_index=True, verbose_name="Нормализованное имя")
+    normalized_name = models.CharField(
+        max_length=255, unique=True, db_index=True, verbose_name="Нормализованное имя"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -68,7 +72,13 @@ class Position(models.Model):
 
 
 class Device(models.Model):
-    inventory_number = models.CharField(max_length=100, blank=True, default="", verbose_name="Инвентарный номер", db_index=True)
+    inventory_number = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        verbose_name="Инвентарный номер",
+        db_index=True,
+    )
     organization = models.ForeignKey(
         Organization,
         on_delete=models.PROTECT,
@@ -76,7 +86,9 @@ class Device(models.Model):
         verbose_name="Организация",
         db_index=True,
     )
-    employee_name = models.CharField(max_length=255, blank=True, default="", verbose_name="ФИО сотрудника")
+    employee_name = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="ФИО сотрудника"
+    )
     position = models.ForeignKey(
         Position,
         on_delete=models.SET_NULL,
@@ -100,26 +112,70 @@ class Device(models.Model):
         verbose_name="Тип устройства",
         db_index=True,
     )
-    cpu_model = models.CharField(max_length=255, verbose_name="Процессор", blank=True, default="")
-    cpu_frequency = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name="Тактовая частота (ГГц)")
+    cpu_model = models.CharField(
+        max_length=255, verbose_name="Процессор", blank=True, default=""
+    )
+    cpu_frequency = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Тактовая частота (ГГц)",
+    )
     ram = models.PositiveIntegerField(verbose_name="ОЗУ (ГБ)", null=True, blank=True)
-    storage_type = models.CharField(max_length=10, choices=StorageType.choices, default=StorageType.HDD, verbose_name="Тип диска")
-    storage_size = models.PositiveIntegerField(verbose_name="Емкость диска (ГБ)", null=True, blank=True)
-    os = models.CharField(max_length=255, verbose_name="Операционная система", blank=True, default="")
+    storage_type = models.CharField(
+        max_length=10,
+        choices=StorageType.choices,
+        default=StorageType.HDD,
+        verbose_name="Тип диска",
+    )
+    storage_size = models.PositiveIntegerField(
+        verbose_name="Емкость диска (ГБ)", null=True, blank=True
+    )
+    os = models.CharField(
+        max_length=255, verbose_name="Операционная система", blank=True, default=""
+    )
 
-    has_google_account = models.BooleanField(null=True, blank=True, verbose_name="Аккаунт Google")
-    has_apple_account = models.BooleanField(null=True, blank=True, verbose_name="Аккаунт Apple")
-    has_microsoft_account = models.BooleanField(null=True, blank=True, verbose_name="Аккаунт Microsoft")
+    has_google_account = models.BooleanField(
+        null=True, blank=True, verbose_name="Аккаунт Google"
+    )
+    has_apple_account = models.BooleanField(
+        null=True, blank=True, verbose_name="Аккаунт Apple"
+    )
+    has_microsoft_account = models.BooleanField(
+        null=True, blank=True, verbose_name="Аккаунт Microsoft"
+    )
 
-    internet_speed = models.CharField(max_length=20, choices=InternetSpeed.choices, null=True, blank=True, verbose_name="Скорость интернета", db_index=True)
-    provider = models.CharField(max_length=255, blank=True, default="", verbose_name="Провайдер")
+    internet_speed = models.CharField(
+        max_length=20,
+        choices=InternetSpeed.choices,
+        null=True,
+        blank=True,
+        verbose_name="Скорость интернета",
+        db_index=True,
+    )
+    provider = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="Провайдер"
+    )
 
-    is_certified = models.BooleanField(null=True, blank=True, verbose_name="Аттестованный компьютер")
-    use_for_text = models.BooleanField(null=True, blank=True, verbose_name="Работа с текстом")
-    use_for_images = models.BooleanField(null=True, blank=True, verbose_name="Работа с картинками/фотографиями")
-    use_for_presentations = models.BooleanField(null=True, blank=True, verbose_name="Создание презентаций")
-    use_for_audio = models.BooleanField(null=True, blank=True, verbose_name="Работа с аудио")
-    use_for_video = models.BooleanField(null=True, blank=True, verbose_name="Работа с видео")
+    is_certified = models.BooleanField(
+        null=True, blank=True, verbose_name="Аттестованный компьютер"
+    )
+    use_for_text = models.BooleanField(
+        null=True, blank=True, verbose_name="Работа с текстом"
+    )
+    use_for_images = models.BooleanField(
+        null=True, blank=True, verbose_name="Работа с картинками/фотографиями"
+    )
+    use_for_presentations = models.BooleanField(
+        null=True, blank=True, verbose_name="Создание презентаций"
+    )
+    use_for_audio = models.BooleanField(
+        null=True, blank=True, verbose_name="Работа с аудио"
+    )
+    use_for_video = models.BooleanField(
+        null=True, blank=True, verbose_name="Работа с видео"
+    )
 
     replacement_status = models.CharField(
         max_length=20,
@@ -128,13 +184,25 @@ class Device(models.Model):
         verbose_name="Статус замены",
         db_index=True,
     )
-    replacement_score = models.PositiveIntegerField(default=0, verbose_name="Оценка замены")
-    replacement_reason = models.TextField(blank=True, default="", verbose_name="Причины оценки")
+    replacement_score = models.PositiveIntegerField(
+        default=0, verbose_name="Оценка замены"
+    )
+    replacement_reason = models.TextField(
+        blank=True, default="", verbose_name="Причины оценки"
+    )
 
-    purchase_date = models.DateField(null=True, blank=True, verbose_name="Дата приобретения")
-    serial_number = models.CharField(max_length=100, blank=True, default="", verbose_name="Серийный номер")
-    agent_hostname = models.CharField(max_length=255, blank=True, default="", verbose_name="Hostname (агент)")
-    last_sync = models.DateTimeField(null=True, blank=True, verbose_name="Последняя синхронизация")
+    purchase_date = models.DateField(
+        null=True, blank=True, verbose_name="Дата приобретения"
+    )
+    serial_number = models.CharField(
+        max_length=100, blank=True, default="", verbose_name="Серийный номер"
+    )
+    agent_hostname = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="Hostname (агент)"
+    )
+    last_sync = models.DateTimeField(
+        null=True, blank=True, verbose_name="Последняя синхронизация"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
@@ -175,27 +243,72 @@ class Device(models.Model):
 
 
 class SystemSettings(models.Model):
-    pc_min_ram_gb = models.PositiveIntegerField(default=8, verbose_name="Мин. допустимое ОЗУ (ГБ)")
-    pc_max_age_years = models.PositiveIntegerField(default=4, verbose_name="Макс. допустимый возраст ПК (лет)")
-    pc_price_default = models.PositiveIntegerField(default=60_000, verbose_name="Стоимость замены ПК по умолчанию (₽)")
-    system_title = models.CharField(max_length=100, default="IT Инвентарь", verbose_name="Название системы")
-    system_subtitle = models.CharField(max_length=200, blank=True, default="Учет компьютерной техники", verbose_name="Подзаголовок")
-    replacement_ram_low_threshold_gb = models.PositiveIntegerField(default=8, verbose_name="Порог ОЗУ: низкий (ГБ)")
-    replacement_ram_mid_threshold_gb = models.PositiveIntegerField(default=16, verbose_name="Порог ОЗУ: средний (ГБ)")
-    replacement_ram_high_threshold_gb = models.PositiveIntegerField(default=32, verbose_name="Порог ОЗУ: высокий (ГБ)")
-    replacement_ram_low_score = models.PositiveIntegerField(default=0, verbose_name="Баллы ОЗУ: низкий уровень")
-    replacement_ram_mid_score = models.PositiveIntegerField(default=1, verbose_name="Баллы ОЗУ: средний уровень")
-    replacement_ram_high_score = models.PositiveIntegerField(default=2, verbose_name="Баллы ОЗУ: хороший уровень")
-    replacement_ram_top_score = models.PositiveIntegerField(default=3, verbose_name="Баллы ОЗУ: высокий уровень")
-    replacement_storage_hdd_score = models.PositiveIntegerField(default=0, verbose_name="Баллы диска HDD")
-    replacement_storage_ssd_score = models.PositiveIntegerField(default=2, verbose_name="Баллы диска SSD")
-    replacement_cpu_weak_score = models.PositiveIntegerField(default=0, verbose_name="Баллы процессора: слабый")
-    replacement_cpu_medium_score = models.PositiveIntegerField(default=1, verbose_name="Баллы процессора: средний")
-    replacement_cpu_good_score = models.PositiveIntegerField(default=2, verbose_name="Баллы процессора: хороший")
-    replacement_cpu_excellent_score = models.PositiveIntegerField(default=3, verbose_name="Баллы процессора: отличный")
-    replacement_cpu_unknown_score = models.PositiveIntegerField(default=1, verbose_name="Баллы процессора: нераспознанный")
-    replacement_attention_threshold = models.PositiveIntegerField(default=3, verbose_name="Порог статуса 'внимание'")
-    replacement_ok_threshold = models.PositiveIntegerField(default=6, verbose_name="Порог статуса 'норма'")
+    pc_min_ram_gb = models.PositiveIntegerField(
+        default=8, verbose_name="Мин. допустимое ОЗУ (ГБ)"
+    )
+    pc_max_age_years = models.PositiveIntegerField(
+        default=4, verbose_name="Макс. допустимый возраст ПК (лет)"
+    )
+    pc_price_default = models.PositiveIntegerField(
+        default=60_000, verbose_name="Стоимость замены ПК по умолчанию (₽)"
+    )
+    system_title = models.CharField(
+        max_length=100, default="IT Инвентарь", verbose_name="Название системы"
+    )
+    system_subtitle = models.CharField(
+        max_length=200,
+        blank=True,
+        default="Учет компьютерной техники",
+        verbose_name="Подзаголовок",
+    )
+    replacement_ram_low_threshold_gb = models.PositiveIntegerField(
+        default=8, verbose_name="Порог ОЗУ: низкий (ГБ)"
+    )
+    replacement_ram_mid_threshold_gb = models.PositiveIntegerField(
+        default=16, verbose_name="Порог ОЗУ: средний (ГБ)"
+    )
+    replacement_ram_high_threshold_gb = models.PositiveIntegerField(
+        default=32, verbose_name="Порог ОЗУ: высокий (ГБ)"
+    )
+    replacement_ram_low_score = models.PositiveIntegerField(
+        default=0, verbose_name="Баллы ОЗУ: низкий уровень"
+    )
+    replacement_ram_mid_score = models.PositiveIntegerField(
+        default=1, verbose_name="Баллы ОЗУ: средний уровень"
+    )
+    replacement_ram_high_score = models.PositiveIntegerField(
+        default=2, verbose_name="Баллы ОЗУ: хороший уровень"
+    )
+    replacement_ram_top_score = models.PositiveIntegerField(
+        default=3, verbose_name="Баллы ОЗУ: высокий уровень"
+    )
+    replacement_storage_hdd_score = models.PositiveIntegerField(
+        default=0, verbose_name="Баллы диска HDD"
+    )
+    replacement_storage_ssd_score = models.PositiveIntegerField(
+        default=2, verbose_name="Баллы диска SSD"
+    )
+    replacement_cpu_weak_score = models.PositiveIntegerField(
+        default=0, verbose_name="Баллы процессора: слабый"
+    )
+    replacement_cpu_medium_score = models.PositiveIntegerField(
+        default=1, verbose_name="Баллы процессора: средний"
+    )
+    replacement_cpu_good_score = models.PositiveIntegerField(
+        default=2, verbose_name="Баллы процессора: хороший"
+    )
+    replacement_cpu_excellent_score = models.PositiveIntegerField(
+        default=3, verbose_name="Баллы процессора: отличный"
+    )
+    replacement_cpu_unknown_score = models.PositiveIntegerField(
+        default=1, verbose_name="Баллы процессора: нераспознанный"
+    )
+    replacement_attention_threshold = models.PositiveIntegerField(
+        default=3, verbose_name="Порог статуса 'внимание'"
+    )
+    replacement_ok_threshold = models.PositiveIntegerField(
+        default=6, verbose_name="Порог статуса 'норма'"
+    )
 
     class Meta:
         verbose_name = "Настройки системы"

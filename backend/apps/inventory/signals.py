@@ -9,6 +9,7 @@ Device post_save / post_delete
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 

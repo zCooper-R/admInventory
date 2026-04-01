@@ -16,7 +16,9 @@ def migrate_device_data(apps, schema_editor):
             normalized_name="неизвестная организация",
         )
 
-    for device in Device.objects.select_related("location__organization").all().iterator():
+    for device in (
+        Device.objects.select_related("location__organization").all().iterator()
+    ):
         org = None
         if device.location_id:
             org = device.location.organization
@@ -31,7 +33,9 @@ def migrate_device_data(apps, schema_editor):
         if device.name is None:
             device.name = ""
 
-        device.save(update_fields=["organization", "storage_type", "inventory_number", "name"])
+        device.save(
+            update_fields=["organization", "storage_type", "inventory_number", "name"]
+        )
 
 
 class Migration(migrations.Migration):
@@ -46,9 +50,30 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Browser",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("name", models.CharField(max_length=120, unique=True, verbose_name="Браузер")),
-                ("normalized_name", models.CharField(db_index=True, max_length=120, unique=True, verbose_name="Нормализованное имя")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=120, unique=True, verbose_name="Браузер"
+                    ),
+                ),
+                (
+                    "normalized_name",
+                    models.CharField(
+                        db_index=True,
+                        max_length=120,
+                        unique=True,
+                        verbose_name="Нормализованное имя",
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
@@ -60,9 +85,30 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Position",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("name", models.CharField(max_length=255, unique=True, verbose_name="Должность")),
-                ("normalized_name", models.CharField(db_index=True, max_length=255, unique=True, verbose_name="Нормализованное имя")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=255, unique=True, verbose_name="Должность"
+                    ),
+                ),
+                (
+                    "normalized_name",
+                    models.CharField(
+                        db_index=True,
+                        max_length=255,
+                        unique=True,
+                        verbose_name="Нормализованное имя",
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
@@ -74,113 +120,209 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="device",
             name="browser",
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="devices", to="inventory.browser", verbose_name="Браузер"),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="devices",
+                to="inventory.browser",
+                verbose_name="Браузер",
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="cpu_frequency",
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=5, null=True, verbose_name="Тактовая частота (ГГц)"),
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=5,
+                null=True,
+                verbose_name="Тактовая частота (ГГц)",
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="create_presentations",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Создание презентаций"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Создание презентаций"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="employee_name",
-            field=models.CharField(blank=True, default="", max_length=255, verbose_name="ФИО сотрудника"),
+            field=models.CharField(
+                blank=True, default="", max_length=255, verbose_name="ФИО сотрудника"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="has_apple_account",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Аккаунт Apple"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Аккаунт Apple"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="has_google_account",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Аккаунт Google"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Аккаунт Google"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="has_microsoft_account",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Аккаунт Microsoft"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Аккаунт Microsoft"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="internet_provider",
-            field=models.CharField(blank=True, default="", max_length=255, verbose_name="Провайдер"),
+            field=models.CharField(
+                blank=True, default="", max_length=255, verbose_name="Провайдер"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="internet_speed",
-            field=models.CharField(blank=True, choices=[("up_to_5", "До 5 Мб/с"), ("from_5_to_50", "От 5 до 50 Мб/с"), ("from_50_to_100", "От 50 до 100 Мб/с"), ("above_100", "Свыше 100 Мб/с")], db_index=True, max_length=20, null=True, verbose_name="Скорость интернета"),
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("up_to_5", "До 5 Мб/с"),
+                    ("from_5_to_50", "От 5 до 50 Мб/с"),
+                    ("from_50_to_100", "От 50 до 100 Мб/с"),
+                    ("above_100", "Свыше 100 Мб/с"),
+                ],
+                db_index=True,
+                max_length=20,
+                null=True,
+                verbose_name="Скорость интернета",
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="is_attested",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Аттестованный компьютер"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Аттестованный компьютер"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="organization",
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name="devices", to="locations.organization", verbose_name="Организация"),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="devices",
+                to="locations.organization",
+                verbose_name="Организация",
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="position",
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="devices", to="inventory.position", verbose_name="Должность"),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="devices",
+                to="inventory.position",
+                verbose_name="Должность",
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="work_with_audio",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Работа с аудио"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Работа с аудио"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="work_with_images",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Работа с картинками/фотографиями"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Работа с картинками/фотографиями"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="work_with_text",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Работа с текстом"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Работа с текстом"
+            ),
         ),
         migrations.AddField(
             model_name="device",
             name="work_with_video",
-            field=models.BooleanField(blank=True, null=True, verbose_name="Работа с видео"),
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Работа с видео"
+            ),
         ),
         migrations.AlterField(
             model_name="device",
             name="name",
-            field=models.CharField(blank=True, db_index=True, default="", max_length=255, verbose_name="Наименование"),
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                default="",
+                max_length=255,
+                verbose_name="Наименование",
+            ),
         ),
         migrations.AlterField(
             model_name="device",
             name="inventory_number",
-            field=models.CharField(blank=True, db_index=True, default="", max_length=100, verbose_name="Инвентарный номер"),
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                default="",
+                max_length=100,
+                verbose_name="Инвентарный номер",
+            ),
         ),
         migrations.AlterField(
             model_name="device",
             name="location",
-            field=models.ForeignKey(blank=True, db_index=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name="devices", to="locations.location", verbose_name="Площадка"),
+            field=models.ForeignKey(
+                blank=True,
+                db_index=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="devices",
+                to="locations.location",
+                verbose_name="Площадка",
+            ),
         ),
         migrations.AlterField(
             model_name="device",
             name="os",
-            field=models.CharField(blank=True, default="", max_length=255, verbose_name="Операционная система"),
+            field=models.CharField(
+                blank=True,
+                default="",
+                max_length=255,
+                verbose_name="Операционная система",
+            ),
         ),
         migrations.RunPython(migrate_device_data, migrations.RunPython.noop),
         migrations.AlterField(
             model_name="device",
             name="organization",
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name="devices", to="locations.organization", verbose_name="Организация"),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="devices",
+                to="locations.organization",
+                verbose_name="Организация",
+            ),
         ),
         migrations.AlterField(
             model_name="device",
             name="storage_type",
-            field=models.CharField(choices=[("HDD", "HDD"), ("SSD", "SSD")], default="HDD", max_length=10, verbose_name="Тип диска"),
+            field=models.CharField(
+                choices=[("HDD", "HDD"), ("SSD", "SSD")],
+                default="HDD",
+                max_length=10,
+                verbose_name="Тип диска",
+            ),
         ),
         migrations.RemoveIndex(
             model_name="device",
@@ -188,10 +330,16 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="device",
-            index=models.Index(fields=["status", "organization"], name="inventory_d_status_e1ce4f_idx"),
+            index=models.Index(
+                fields=["status", "organization"], name="inventory_d_status_e1ce4f_idx"
+            ),
         ),
         migrations.AddConstraint(
             model_name="device",
-            constraint=models.UniqueConstraint(condition=~models.Q(inventory_number=""), fields=("inventory_number",), name="inventory_device_inventory_number_not_blank_uniq"),
+            constraint=models.UniqueConstraint(
+                condition=~models.Q(inventory_number=""),
+                fields=("inventory_number",),
+                name="inventory_device_inventory_number_not_blank_uniq",
+            ),
         ),
     ]

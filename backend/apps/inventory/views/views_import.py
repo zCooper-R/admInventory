@@ -3,6 +3,7 @@ Excel import / export / template-download views.
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 from __future__ import annotations
 
 import logging
@@ -75,11 +76,17 @@ def pc_import(request):
     else:
         form = PCImportForm()
 
-    return render(request, "inventory/pc_import.html", {
-        "nav_active":  "import",
-        "form":        form,
-        "recent_logs": ImportLog.objects.select_related("uploaded_by").order_by("-created_at")[:8],
-    })
+    return render(
+        request,
+        "inventory/pc_import.html",
+        {
+            "nav_active": "import",
+            "form": form,
+            "recent_logs": ImportLog.objects.select_related("uploaded_by").order_by(
+                "-created_at"
+            )[:8],
+        },
+    )
 
 
 @login_required

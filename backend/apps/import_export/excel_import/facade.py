@@ -78,7 +78,9 @@ def process_excel_import(import_log: ImportLog) -> None:
     import_log.created_count = result.created
     import_log.updated_count = result.updated
     import_log.error_count = len(result.errors)
-    import_log.errors = [{"row": err.row, "message": err.message} for err in result.errors]
+    import_log.errors = [
+        {"row": err.row, "message": err.message} for err in result.errors
+    ]
     import_log.save(
         update_fields=[
             "status",

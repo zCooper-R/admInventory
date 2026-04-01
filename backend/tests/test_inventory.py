@@ -31,11 +31,15 @@ class TestDeviceAPI:
         org = OrganizationFactory()
         DeviceFactory(organization=org)
         DeviceFactory()
-        response = authenticated_client.get(reverse("device-list"), {"organization": org.pk})
+        response = authenticated_client.get(
+            reverse("device-list"), {"organization": org.pk}
+        )
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
 
-    def test_create_device_without_name_location_assigned_to(self, authenticated_client):
+    def test_create_device_without_name_location_assigned_to(
+        self, authenticated_client
+    ):
         org = OrganizationFactory()
         payload = {
             "inventory_number": "NEW-001",
@@ -46,7 +50,9 @@ class TestDeviceAPI:
             "storage_type": "SSD",
             "employee_name": "Иванов И.И.",
         }
-        response = authenticated_client.post(reverse("device-list"), payload, format="json")
+        response = authenticated_client.post(
+            reverse("device-list"), payload, format="json"
+        )
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_replacement_status_is_present(self, authenticated_client):

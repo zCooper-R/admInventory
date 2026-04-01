@@ -15,20 +15,38 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name="device", name="location"),
         migrations.RemoveField(model_name="device", name="assigned_to"),
         migrations.RemoveField(model_name="device", name="status"),
-
-        migrations.RenameField(model_name="device", old_name="cpu", new_name="cpu_model"),
-        migrations.RenameField(model_name="device", old_name="internet_provider", new_name="provider"),
-        migrations.RenameField(model_name="device", old_name="is_attested", new_name="is_certified"),
-        migrations.RenameField(model_name="device", old_name="work_with_text", new_name="use_for_text"),
-        migrations.RenameField(model_name="device", old_name="work_with_images", new_name="use_for_images"),
-        migrations.RenameField(model_name="device", old_name="create_presentations", new_name="use_for_presentations"),
-        migrations.RenameField(model_name="device", old_name="work_with_audio", new_name="use_for_audio"),
-        migrations.RenameField(model_name="device", old_name="work_with_video", new_name="use_for_video"),
-
+        migrations.RenameField(
+            model_name="device", old_name="cpu", new_name="cpu_model"
+        ),
+        migrations.RenameField(
+            model_name="device", old_name="internet_provider", new_name="provider"
+        ),
+        migrations.RenameField(
+            model_name="device", old_name="is_attested", new_name="is_certified"
+        ),
+        migrations.RenameField(
+            model_name="device", old_name="work_with_text", new_name="use_for_text"
+        ),
+        migrations.RenameField(
+            model_name="device", old_name="work_with_images", new_name="use_for_images"
+        ),
+        migrations.RenameField(
+            model_name="device",
+            old_name="create_presentations",
+            new_name="use_for_presentations",
+        ),
+        migrations.RenameField(
+            model_name="device", old_name="work_with_audio", new_name="use_for_audio"
+        ),
+        migrations.RenameField(
+            model_name="device", old_name="work_with_video", new_name="use_for_video"
+        ),
         migrations.AddField(
             model_name="device",
             name="replacement_reason",
-            field=models.TextField(blank=True, default="", verbose_name="Причины оценки"),
+            field=models.TextField(
+                blank=True, default="", verbose_name="Причины оценки"
+            ),
         ),
         migrations.AddField(
             model_name="device",
@@ -39,22 +57,35 @@ class Migration(migrations.Migration):
             model_name="device",
             name="replacement_status",
             field=models.CharField(
-                choices=[("ok", "OK"), ("attention", "Требует внимания"), ("replace", "Требует замены")],
+                choices=[
+                    ("ok", "OK"),
+                    ("attention", "Требует внимания"),
+                    ("replace", "Требует замены"),
+                ],
                 db_index=True,
                 default="attention",
                 max_length=20,
                 verbose_name="Статус замены",
             ),
         ),
-
-        migrations.RemoveIndex(model_name="device", name="inventory_d_status_e1ce4f_idx"),
-        migrations.RemoveIndex(model_name="device", name="inventory_d_device__bd33a5_idx"),
-        migrations.AddIndex(
-            model_name="device",
-            index=models.Index(fields=["replacement_status", "organization"], name="inventory_d_replace_8f7983_idx"),
+        migrations.RemoveIndex(
+            model_name="device", name="inventory_d_status_e1ce4f_idx"
+        ),
+        migrations.RemoveIndex(
+            model_name="device", name="inventory_d_device__bd33a5_idx"
         ),
         migrations.AddIndex(
             model_name="device",
-            index=models.Index(fields=["device_type", "replacement_status"], name="inventory_d_device__9fb89d_idx"),
+            index=models.Index(
+                fields=["replacement_status", "organization"],
+                name="inventory_d_replace_8f7983_idx",
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="device",
+            index=models.Index(
+                fields=["device_type", "replacement_status"],
+                name="inventory_d_device__9fb89d_idx",
+            ),
         ),
     ]

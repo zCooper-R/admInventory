@@ -15,7 +15,11 @@ from apps.users.models import User, UserRole
 _FIXTURE_PATH = Path(__file__).resolve().parents[4] / "fixtures" / "demo_data.json"
 _RNG = random.Random(2024)
 
-_STORAGE_TYPE_MAP = {"HDD": StorageType.HDD, "SSD": StorageType.SSD, "Mixed": StorageType.HDD}
+_STORAGE_TYPE_MAP = {
+    "HDD": StorageType.HDD,
+    "SSD": StorageType.SSD,
+    "Mixed": StorageType.HDD,
+}
 
 
 class Command(BaseCommand):
@@ -36,13 +40,20 @@ class Command(BaseCommand):
         org_map: dict[str, Organization] = {}
         for org_def in catalog["organizations"]:
             normalized = normalize_organization_name(org_def["name"])
-            org, _ = Organization.objects.get_or_create(normalized_name=normalized, defaults={"name": org_def["name"], "address": ""})
+            org, _ = Organization.objects.get_or_create(
+                normalized_name=normalized,
+                defaults={"name": org_def["name"], "address": ""},
+            )
             org_map[org_def["name"]] = org
 
         for uname, email, _org_name, _loc_name in catalog["managers"]:
             user, created = User.objects.get_or_create(
                 username=uname,
-                defaults={"email": email, "full_name": f"Менеджер {uname}", "role": UserRole.MANAGER},
+                defaults={
+                    "email": email,
+                    "full_name": f"Менеджер {uname}",
+                    "role": UserRole.MANAGER,
+                },
             )
             if created:
                 user.set_password("demo1234")
@@ -60,7 +71,9 @@ class Command(BaseCommand):
                         "device_type": DeviceType.PC,
                         "cpu_model": _RNG.choice(hw["cpu"][era]),
                         "ram": _RNG.choice(hw["ram"][era]),
-                        "storage_type": _STORAGE_TYPE_MAP.get(storage_type_str, StorageType.HDD),
+                        "storage_type": _STORAGE_TYPE_MAP.get(
+                            storage_type_str, StorageType.HDD
+                        ),
                         "storage_size": storage_size,
                         "os": _RNG.choice(hw["os"][era]),
                         "employee_name": f"Сотрудник {counter}",

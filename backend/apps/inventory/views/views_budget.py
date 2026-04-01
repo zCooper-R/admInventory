@@ -19,7 +19,11 @@ def budget_report(request):
     else:
         price_per_pc = None
 
-    report = build_budget_report(price_per_pc) if price_per_pc else get_cached_budget_report()
+    report = (
+        build_budget_report(price_per_pc)
+        if price_per_pc
+        else get_cached_budget_report()
+    )
     logger.info(
         "Открыт отчёт бюджета: user=%s price=%s devices=%s replace=%s attention=%s ok=%s",
         request.user.username,

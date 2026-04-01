@@ -119,7 +119,10 @@ def _ram_score(device, cfg: SystemSettings) -> tuple[int, str]:
         return cfg.replacement_ram_low_score, "ОЗУ не указано"
 
     if ram < cfg.replacement_ram_low_threshold_gb:
-        return cfg.replacement_ram_low_score, f"ОЗУ {ram} ГБ: ниже {cfg.replacement_ram_low_threshold_gb} ГБ"
+        return (
+            cfg.replacement_ram_low_score,
+            f"ОЗУ {ram} ГБ: ниже {cfg.replacement_ram_low_threshold_gb} ГБ",
+        )
     if ram < cfg.replacement_ram_mid_threshold_gb:
         return cfg.replacement_ram_mid_score, f"ОЗУ {ram} ГБ: базовый уровень"
     if ram < cfg.replacement_ram_high_threshold_gb:

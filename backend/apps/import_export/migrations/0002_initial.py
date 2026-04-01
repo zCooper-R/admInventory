@@ -10,14 +10,20 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('import_export', '0001_initial'),
+        ("import_export", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='importlog',
-            name='uploaded_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='import_logs', to=settings.AUTH_USER_MODEL, verbose_name='Загрузил'),
+            model_name="importlog",
+            name="uploaded_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="import_logs",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Загрузил",
+            ),
         ),
     ]

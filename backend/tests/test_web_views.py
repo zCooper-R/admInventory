@@ -52,7 +52,9 @@ class TestWebViews:
             "storage_type": "SSD",
             "employee_name": "Петров П.П.",
         }
-        r2 = client_auth.post(reverse("pc-edit", kwargs={"pk": device.pk}), edit_payload)
+        r2 = client_auth.post(
+            reverse("pc-edit", kwargs={"pk": device.pk}), edit_payload
+        )
         assert r2.status_code == 302
 
         r3 = client_auth.post(reverse("pc-delete", kwargs={"pk": device.pk}))
@@ -60,16 +62,40 @@ class TestWebViews:
 
     def test_sorting_by_new_fields(self, client_auth):
         org = OrganizationFactory(name="Орг С")
-        DeviceFactory(inventory_number="S-1", organization=org, os="Windows 11", cpu_model="Intel Core i7-12700", cpu_frequency=3.8, ram=16, storage_type="SSD", storage_size=512, provider="Провайдер Б")
-        DeviceFactory(inventory_number="S-2", organization=org, os="Windows 10", cpu_model="Intel Core i3-7100", cpu_frequency=2.9, ram=8, storage_type="HDD", storage_size=256, provider="Провайдер А")
+        DeviceFactory(
+            inventory_number="S-1",
+            organization=org,
+            os="Windows 11",
+            cpu_model="Intel Core i7-12700",
+            cpu_frequency=3.8,
+            ram=16,
+            storage_type="SSD",
+            storage_size=512,
+            provider="Провайдер Б",
+        )
+        DeviceFactory(
+            inventory_number="S-2",
+            organization=org,
+            os="Windows 10",
+            cpu_model="Intel Core i3-7100",
+            cpu_frequency=2.9,
+            ram=8,
+            storage_type="HDD",
+            storage_size=256,
+            provider="Провайдер А",
+        )
 
-        response = client_auth.get(reverse("pc-list"), {"sort": "cpu_frequency", "dir": "asc"})
+        response = client_auth.get(
+            reverse("pc-list"), {"sort": "cpu_frequency", "dir": "asc"}
+        )
         assert response.status_code == 200
         page = response.context["pcs"]
         freqs = [float(item.cpu_frequency or 0) for item in page.object_list[:2]]
         assert freqs == sorted(freqs)
 
-        response2 = client_auth.get(reverse("pc-list"), {"sort": "provider", "dir": "asc"})
+        response2 = client_auth.get(
+            reverse("pc-list"), {"sort": "provider", "dir": "asc"}
+        )
         assert response2.status_code == 200
 
     def test_russian_ui_labels_present(self, client_auth):

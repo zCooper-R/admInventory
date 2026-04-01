@@ -12,6 +12,7 @@ Covers
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 import pytest
 from django.core.cache import cache
 from django.test import Client
@@ -53,6 +54,7 @@ def regular_client(db):
 
 # ── SystemSettings model ───────────────────────────────────────────────────────
 
+
 @pytest.mark.django_db
 class TestSystemSettingsModel:
     def test_get_creates_singleton(self):
@@ -88,6 +90,7 @@ class TestSystemSettingsModel:
 
 # ── Settings view ──────────────────────────────────────────────────────────────
 
+
 @pytest.mark.django_db
 class TestSystemSettingsView:
     def test_requires_login(self):
@@ -114,34 +117,37 @@ class TestSystemSettingsView:
         SystemSettings.get()  # ensure singleton exists
         url = reverse("system-settings")
         settings_obj = SystemSettings.get()
-        response = admin_client.post(url, {
-            "system_title":     "Test Title",
-            "system_subtitle":  "Test Subtitle",
-            "pc_min_ram_gb":    8,
-            "pc_max_age_years": 5,
-            "pc_price_default": 75000,
-            "replacement_ram_low_threshold_gb": settings_obj.replacement_ram_low_threshold_gb,
-            "replacement_ram_mid_threshold_gb": settings_obj.replacement_ram_mid_threshold_gb,
-            "replacement_ram_high_threshold_gb": settings_obj.replacement_ram_high_threshold_gb,
-            "replacement_ram_low_score": settings_obj.replacement_ram_low_score,
-            "replacement_ram_mid_score": settings_obj.replacement_ram_mid_score,
-            "replacement_ram_high_score": settings_obj.replacement_ram_high_score,
-            "replacement_ram_top_score": settings_obj.replacement_ram_top_score,
-            "replacement_storage_hdd_score": settings_obj.replacement_storage_hdd_score,
-            "replacement_storage_ssd_score": settings_obj.replacement_storage_ssd_score,
-            "replacement_cpu_weak_score": settings_obj.replacement_cpu_weak_score,
-            "replacement_cpu_medium_score": settings_obj.replacement_cpu_medium_score,
-            "replacement_cpu_good_score": settings_obj.replacement_cpu_good_score,
-            "replacement_cpu_excellent_score": settings_obj.replacement_cpu_excellent_score,
-            "replacement_cpu_unknown_score": settings_obj.replacement_cpu_unknown_score,
-            "replacement_attention_threshold": settings_obj.replacement_attention_threshold,
-            "replacement_ok_threshold": settings_obj.replacement_ok_threshold,
-        })
+        response = admin_client.post(
+            url,
+            {
+                "system_title": "Test Title",
+                "system_subtitle": "Test Subtitle",
+                "pc_min_ram_gb": 8,
+                "pc_max_age_years": 5,
+                "pc_price_default": 75000,
+                "replacement_ram_low_threshold_gb": settings_obj.replacement_ram_low_threshold_gb,
+                "replacement_ram_mid_threshold_gb": settings_obj.replacement_ram_mid_threshold_gb,
+                "replacement_ram_high_threshold_gb": settings_obj.replacement_ram_high_threshold_gb,
+                "replacement_ram_low_score": settings_obj.replacement_ram_low_score,
+                "replacement_ram_mid_score": settings_obj.replacement_ram_mid_score,
+                "replacement_ram_high_score": settings_obj.replacement_ram_high_score,
+                "replacement_ram_top_score": settings_obj.replacement_ram_top_score,
+                "replacement_storage_hdd_score": settings_obj.replacement_storage_hdd_score,
+                "replacement_storage_ssd_score": settings_obj.replacement_storage_ssd_score,
+                "replacement_cpu_weak_score": settings_obj.replacement_cpu_weak_score,
+                "replacement_cpu_medium_score": settings_obj.replacement_cpu_medium_score,
+                "replacement_cpu_good_score": settings_obj.replacement_cpu_good_score,
+                "replacement_cpu_excellent_score": settings_obj.replacement_cpu_excellent_score,
+                "replacement_cpu_unknown_score": settings_obj.replacement_cpu_unknown_score,
+                "replacement_attention_threshold": settings_obj.replacement_attention_threshold,
+                "replacement_ok_threshold": settings_obj.replacement_ok_threshold,
+            },
+        )
         assert response.status_code == 302
 
         updated = SystemSettings.objects.get(pk=1)
-        assert updated.system_title    == "Test Title"
-        assert updated.pc_min_ram_gb   == 8
+        assert updated.system_title == "Test Title"
+        assert updated.pc_min_ram_gb == 8
         assert updated.pc_price_default == 75000
 
     def test_invalid_post_shows_form_again(self, admin_client):
@@ -152,6 +158,7 @@ class TestSystemSettingsView:
 
 
 # ── Budget cache ───────────────────────────────────────────────────────────────
+
 
 @pytest.mark.django_db
 class TestBudgetCache:
@@ -191,10 +198,26 @@ class TestBudgetCache:
         assert report1.price_per_pc == report2.price_per_pc
 
     def test_budget_default_ordering_is_replace_attention_ok(self):
-        DeviceFactory(inventory_number="INV-OK", replacement_status=ReplacementStatus.OK, replacement_score=9)
-        DeviceFactory(inventory_number="INV-ATTN", replacement_status=ReplacementStatus.ATTENTION, replacement_score=3)
-        DeviceFactory(inventory_number="INV-REPL-2", replacement_status=ReplacementStatus.REPLACE, replacement_score=4)
-        DeviceFactory(inventory_number="INV-REPL-1", replacement_status=ReplacementStatus.REPLACE, replacement_score=2)
+        DeviceFactory(
+            inventory_number="INV-OK",
+            replacement_status=ReplacementStatus.OK,
+            replacement_score=9,
+        )
+        DeviceFactory(
+            inventory_number="INV-ATTN",
+            replacement_status=ReplacementStatus.ATTENTION,
+            replacement_score=3,
+        )
+        DeviceFactory(
+            inventory_number="INV-REPL-2",
+            replacement_status=ReplacementStatus.REPLACE,
+            replacement_score=4,
+        )
+        DeviceFactory(
+            inventory_number="INV-REPL-1",
+            replacement_status=ReplacementStatus.REPLACE,
+            replacement_score=2,
+        )
 
         report = build_budget_report()
         ordered_numbers = [d.inventory_number for d in report.devices]

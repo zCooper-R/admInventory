@@ -60,17 +60,24 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="organization",
             name="normalized_name",
-            field=models.CharField(default="", max_length=255, verbose_name="Нормализованное название"),
+            field=models.CharField(
+                default="", max_length=255, verbose_name="Нормализованное название"
+            ),
             preserve_default=False,
         ),
         migrations.RunPython(fill_normalized_names, migrations.RunPython.noop),
         migrations.AlterField(
             model_name="organization",
             name="normalized_name",
-            field=models.CharField(max_length=255, unique=True, verbose_name="Нормализованное название"),
+            field=models.CharField(
+                max_length=255, unique=True, verbose_name="Нормализованное название"
+            ),
         ),
         migrations.AddConstraint(
             model_name="organization",
-            constraint=models.UniqueConstraint(django.db.models.functions.text.Lower("normalized_name"), name="locations_org_normalized_name_ci_uniq"),
+            constraint=models.UniqueConstraint(
+                django.db.models.functions.text.Lower("normalized_name"),
+                name="locations_org_normalized_name_ci_uniq",
+            ),
         ),
     ]

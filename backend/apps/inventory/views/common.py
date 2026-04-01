@@ -13,10 +13,14 @@ def is_htmx(request) -> bool:
 
 def htmx_close_and_refresh(message: str, event: str = "pcSaved") -> HttpResponse:
     response = HttpResponse(status=204)
-    response["HX-Trigger"] = json.dumps({event: {"message": message}, "closeModal": True})
+    response["HX-Trigger"] = json.dumps(
+        {event: {"message": message}, "closeModal": True}
+    )
     return response
 
 
 def pc_qs(user=None):
-    qs = Device.objects.filter(device_type=DeviceType.PC).select_related("organization", "position", "browser")
+    qs = Device.objects.filter(device_type=DeviceType.PC).select_related(
+        "organization", "position", "browser"
+    )
     return qs

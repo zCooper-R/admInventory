@@ -6,7 +6,13 @@ from openpyxl import Workbook
 
 from apps.import_export.models import ImportLog, ImportStatus
 from apps.import_export.services import process_excel_import
-from apps.inventory.models import Browser, Device, InternetSpeed, Position, ReplacementStatus
+from apps.inventory.models import (
+    Browser,
+    Device,
+    InternetSpeed,
+    Position,
+    ReplacementStatus,
+)
 from apps.locations.models import Organization
 from .factories import AdminUserFactory
 
@@ -44,30 +50,35 @@ def make_excel_bytes(rows: list[dict], include_numbering_row: bool = True) -> by
         ws.append([str(i) for i in range(1, len(HEADERS) + 1)])
 
     for idx, row in enumerate(rows, start=1):
-        ws.append([
-            row.get("№ п/п", str(idx)),
-            row.get("Наименование юридического лица", ""),
-            row.get("Адрес организации", ""),
-            row.get("Наименование ОС", ""),
-            row.get("Инв. №", ""),
-            row.get("Наименование процессора", ""),
-            row.get("Тактовая частота", ""),
-            row.get("Оперативная память", ""),
-            row.get("Тип диска", ""),
-            row.get("Емкость диска", ""),
-            row.get("Браузер которым пользуетесь", ""),
-            row.get("Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft", ""),
-            row.get("Скорость интернета", ""),
-            row.get("Провайдер", ""),
-            row.get("Аттестованный компьютер", ""),
-            row.get("Работа с текстом", ""),
-            row.get("Работа с картинками, фотографиями", ""),
-            row.get("Создание презентаций", ""),
-            row.get("Работа с аудио", ""),
-            row.get("Работа с видео", ""),
-            row.get("Фамилия, инициалы сотрудника", ""),
-            row.get("Должность", ""),
-        ])
+        ws.append(
+            [
+                row.get("№ п/п", str(idx)),
+                row.get("Наименование юридического лица", ""),
+                row.get("Адрес организации", ""),
+                row.get("Наименование ОС", ""),
+                row.get("Инв. №", ""),
+                row.get("Наименование процессора", ""),
+                row.get("Тактовая частота", ""),
+                row.get("Оперативная память", ""),
+                row.get("Тип диска", ""),
+                row.get("Емкость диска", ""),
+                row.get("Браузер которым пользуетесь", ""),
+                row.get(
+                    "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft",
+                    "",
+                ),
+                row.get("Скорость интернета", ""),
+                row.get("Провайдер", ""),
+                row.get("Аттестованный компьютер", ""),
+                row.get("Работа с текстом", ""),
+                row.get("Работа с картинками, фотографиями", ""),
+                row.get("Создание презентаций", ""),
+                row.get("Работа с аудио", ""),
+                row.get("Работа с видео", ""),
+                row.get("Фамилия, инициалы сотрудника", ""),
+                row.get("Должность", ""),
+            ]
+        )
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -105,9 +116,15 @@ def base_row(**overrides):
 
 @pytest.mark.django_db
 class TestExcelImportService:
-    def _create_import_log(self, excel_bytes: bytes, filename: str = "test.xlsx") -> ImportLog:
+    def _create_import_log(
+        self, excel_bytes: bytes, filename: str = "test.xlsx"
+    ) -> ImportLog:
         user = AdminUserFactory()
-        uploaded = SimpleUploadedFile(filename, excel_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        uploaded = SimpleUploadedFile(
+            filename,
+            excel_bytes,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
         return ImportLog.objects.create(file=uploaded, uploaded_by=user)
 
     def test_import_creates_device_and_dictionaries(self):
@@ -125,10 +142,18 @@ class TestExcelImportService:
         assert device.employee_name == "Иванов И.И."
 
     def test_reimport_updates_by_inventory_number(self):
-        log1 = self._create_import_log(make_excel_bytes([base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "8"})]))
+        log1 = self._create_import_log(
+            make_excel_bytes(
+                [base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "8"})]
+            )
+        )
         process_excel_import(log1)
 
-        log2 = self._create_import_log(make_excel_bytes([base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "32"})]))
+        log2 = self._create_import_log(
+            make_excel_bytes(
+                [base_row(**{"Инв. №": "INV-UPDATE", "Оперативная память": "32"})]
+            )
+        )
         process_excel_import(log2)
 
         device = Device.objects.get(inventory_number="INV-UPDATE")
@@ -143,15 +168,27 @@ class TestExcelImportService:
         assert "инвентарный номер" in log.errors[0]["message"].lower()
 
     def test_organization_normalization_merges_aliases(self):
-        row1 = base_row(**{"Инв. №": "INV-ORG-1", "Наименование юридического лица": "МКУ ГИМК"})
-        row2 = base_row(**{"Инв. №": "INV-ORG-2", "Наименование юридического лица": "Муниципальное казенное учреждение Городской информационно-методический кабинет"})
+        row1 = base_row(
+            **{"Инв. №": "INV-ORG-1", "Наименование юридического лица": "МКУ ГИМК"}
+        )
+        row2 = base_row(
+            **{
+                "Инв. №": "INV-ORG-2",
+                "Наименование юридического лица": "Муниципальное казенное учреждение Городской информационно-методический кабинет",
+            }
+        )
         log = self._create_import_log(make_excel_bytes([row1, row2]))
         process_excel_import(log)
 
         assert Organization.objects.count() == 1
 
     def test_accounts_field_is_split(self):
-        row = base_row(**{"Инв. №": "INV-ACC", "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "Аккаунт Google, Аккаунт Apple"})
+        row = base_row(
+            **{
+                "Инв. №": "INV-ACC",
+                "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "Аккаунт Google, Аккаунт Apple",
+            }
+        )
         log = self._create_import_log(make_excel_bytes([row]))
         process_excel_import(log)
 
@@ -161,15 +198,17 @@ class TestExcelImportService:
         assert device.has_microsoft_account is False
 
     def test_boolean_fields_parsing(self):
-        row = base_row(**{
-            "Инв. №": "INV-BOOL",
-            "Аттестованный компьютер": "+",
-            "Работа с текстом": "да",
-            "Работа с картинками, фотографиями": "есть",
-            "Создание презентаций": "true",
-            "Работа с аудио": "-",
-            "Работа с видео": "нет",
-        })
+        row = base_row(
+            **{
+                "Инв. №": "INV-BOOL",
+                "Аттестованный компьютер": "+",
+                "Работа с текстом": "да",
+                "Работа с картинками, фотографиями": "есть",
+                "Создание презентаций": "true",
+                "Работа с аудио": "-",
+                "Работа с видео": "нет",
+            }
+        )
         log = self._create_import_log(make_excel_bytes([row]))
         process_excel_import(log)
 
@@ -201,7 +240,9 @@ class TestExcelImportService:
         assert not Device.objects.filter(inventory_number="INV-BAD").exists()
 
     def test_replacement_status_calculated(self):
-        row = base_row(**{"Инв. №": "INV-REP", "Оперативная память": "4", "Тип диска": "HDD"})
+        row = base_row(
+            **{"Инв. №": "INV-REP", "Оперативная память": "4", "Тип диска": "HDD"}
+        )
         log = self._create_import_log(make_excel_bytes([row]))
         process_excel_import(log)
 
@@ -216,8 +257,60 @@ class TestExcelImportService:
         ws.append([str(i) for i in range(1, len(HEADERS) + 2)])  # numbering row
         valid = base_row(**{"Инв. №": "INV-TAIL-1"})
         ws.append([valid.get(h, "") for h in HEADERS] + ["x"])
-        ws.append(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "служебный хвост"])
-        ws.append(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "итого: 1"])
+        ws.append(
+            [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "служебный хвост",
+            ]
+        )
+        ws.append(
+            [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "итого: 1",
+            ]
+        )
 
         buf = io.BytesIO()
         wb.save(buf)

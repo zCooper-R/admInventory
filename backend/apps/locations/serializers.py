@@ -10,11 +10,20 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    organization_name = serializers.CharField(source="organization.name", read_only=True)
+    organization_name = serializers.CharField(
+        source="organization.name", read_only=True
+    )
 
     class Meta:
         model = Location
-        fields = ("id", "name", "address", "organization", "organization_name", "created_at")
+        fields = (
+            "id",
+            "name",
+            "address",
+            "organization",
+            "organization_name",
+            "created_at",
+        )
         read_only_fields = ("created_at",)
 
 

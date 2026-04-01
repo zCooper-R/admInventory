@@ -9,6 +9,7 @@ Covers
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 import io
 
 import openpyxl
@@ -19,9 +20,7 @@ from django.urls import reverse
 from apps.inventory.services.template_excel import COLUMNS, build_import_template_bytes
 from .factories import AdminUserFactory
 
-XLSX_CONTENT_TYPE = (
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 @pytest.fixture

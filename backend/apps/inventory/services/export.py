@@ -30,7 +30,11 @@ def _accounts_to_text(device: Device) -> str:
         return ", ".join(parts)
 
     # Explicitly write "Нет" only when all flags are explicitly False.
-    flags = (device.has_google_account, device.has_apple_account, device.has_microsoft_account)
+    flags = (
+        device.has_google_account,
+        device.has_apple_account,
+        device.has_microsoft_account,
+    )
     if all(flag is False for flag in flags):
         return "Нет"
     return ""

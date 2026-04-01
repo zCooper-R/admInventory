@@ -42,9 +42,22 @@ class DeviceAdmin(admin.ModelAdmin):
         "has_apple_account",
         "has_microsoft_account",
     )
-    search_fields = ("inventory_number", "employee_name", "organization__name", "position__name", "cpu_model", "os")
+    search_fields = (
+        "inventory_number",
+        "employee_name",
+        "organization__name",
+        "position__name",
+        "cpu_model",
+        "os",
+    )
     list_select_related = ("organization", "position", "browser")
-    readonly_fields = ("replacement_status", "replacement_score", "replacement_reason", "created_at", "updated_at")
+    readonly_fields = (
+        "replacement_status",
+        "replacement_score",
+        "replacement_reason",
+        "created_at",
+        "updated_at",
+    )
     ordering = ("inventory_number", "id")
     autocomplete_fields = ("organization", "position", "browser")
 
@@ -68,7 +81,11 @@ class SystemSettingsAdmin(admin.ModelAdmin):
         ),
         (
             "Логика замены: Накопитель",
-            {"fields": (("replacement_storage_hdd_score", "replacement_storage_ssd_score"),)},
+            {
+                "fields": (
+                    ("replacement_storage_hdd_score", "replacement_storage_ssd_score"),
+                )
+            },
         ),
         (
             "Логика замены: Процессор",
@@ -82,7 +99,11 @@ class SystemSettingsAdmin(admin.ModelAdmin):
         ),
         (
             "Логика замены: Пороги статусов",
-            {"fields": (("replacement_attention_threshold", "replacement_ok_threshold"),)},
+            {
+                "fields": (
+                    ("replacement_attention_threshold", "replacement_ok_threshold"),
+                )
+            },
         ),
     )
 

@@ -13,6 +13,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="organization",
             name="address",
-            field=models.CharField(blank=True, default="", max_length=500, verbose_name="Адрес"),
+            field=models.CharField(
+                blank=True, default="", max_length=500, verbose_name="Адрес"
+            ),
         ),
     ]

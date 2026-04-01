@@ -33,15 +33,23 @@ class BudgetReport:
 
     @property
     def replacement_count(self) -> int:
-        return sum(1 for d in self.devices if d.replacement_status == ReplacementStatus.REPLACE)
+        return sum(
+            1 for d in self.devices if d.replacement_status == ReplacementStatus.REPLACE
+        )
 
     @property
     def attention_count(self) -> int:
-        return sum(1 for d in self.devices if d.replacement_status == ReplacementStatus.ATTENTION)
+        return sum(
+            1
+            for d in self.devices
+            if d.replacement_status == ReplacementStatus.ATTENTION
+        )
 
     @property
     def ok_count(self) -> int:
-        return sum(1 for d in self.devices if d.replacement_status == ReplacementStatus.OK)
+        return sum(
+            1 for d in self.devices if d.replacement_status == ReplacementStatus.OK
+        )
 
     @property
     def total_cost(self) -> int:
@@ -68,7 +76,12 @@ def build_budget_report(price_per_pc: int | None = None) -> BudgetReport:
         Device.objects.filter(device_type=DeviceType.PC)
         .annotate(_status_order=status_order)
         .select_related("organization", "position", "browser")
-        .order_by("_status_order", "replacement_score", "organization__name", "inventory_number")
+        .order_by(
+            "_status_order",
+            "replacement_score",
+            "organization__name",
+            "inventory_number",
+        )
     )
 
     grouped: dict[int, dict] = {}
@@ -104,7 +117,9 @@ def build_budget_report(price_per_pc: int | None = None) -> BudgetReport:
     ]
     by_organization.sort(key=lambda item: (-item.to_replace, item.organization_name))
 
-    return BudgetReport(devices=devices, by_organization=by_organization, price_per_pc=effective_price)
+    return BudgetReport(
+        devices=devices, by_organization=by_organization, price_per_pc=effective_price
+    )
 
 
 def get_cached_budget_report() -> BudgetReport:

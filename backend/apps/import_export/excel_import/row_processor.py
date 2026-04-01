@@ -59,7 +59,9 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
     if not storage_type:
         raise ValueError("Тип диска должен быть SSD или HDD")
 
-    organization = OrganizationResolver.resolve_or_create(organization_name, values.get("organization_address", ""))
+    organization = OrganizationResolver.resolve_or_create(
+        organization_name, values.get("organization_address", "")
+    )
     position = PositionResolver.resolve_or_create(values.get("position", ""))
     browser = BrowserResolver.resolve_or_create(values.get("browser", ""))
 
@@ -94,9 +96,17 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
     created = device is None
     if created:
         device = Device(inventory_number=inventory_number, organization=organization)
-        logger.debug("Создаётся новое устройство: row=%s inventory=%s", parsed_row.row_number, inventory_number)
+        logger.debug(
+            "Создаётся новое устройство: row=%s inventory=%s",
+            parsed_row.row_number,
+            inventory_number,
+        )
     else:
-        logger.debug("Обновляется устройство: row=%s inventory=%s", parsed_row.row_number, inventory_number)
+        logger.debug(
+            "Обновляется устройство: row=%s inventory=%s",
+            parsed_row.row_number,
+            inventory_number,
+        )
 
     for field_name, field_value in values_to_apply.items():
         setattr(device, field_name, field_value)

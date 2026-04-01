@@ -7,7 +7,12 @@ from django.db import IntegrityError
 from apps.inventory.models import Browser, Position
 from apps.locations.models import Organization
 
-from .normalizers import normalize_browser, normalize_org, normalize_position, normalize_text
+from .normalizers import (
+    normalize_browser,
+    normalize_org,
+    normalize_position,
+    normalize_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +30,11 @@ class OrganizationResolver:
         org = Organization.objects.filter(normalized_name=normalized).first()
         if org:
             updates: list[str] = []
-            if display_name and org.name != display_name and len(display_name) > len(org.name):
+            if (
+                display_name
+                and org.name != display_name
+                and len(display_name) > len(org.name)
+            ):
                 org.name = display_name
                 updates.append("name")
             if normalized_address and org.address != normalized_address:
@@ -33,9 +42,16 @@ class OrganizationResolver:
                 updates.append("address")
             if updates:
                 org.save(update_fields=updates + ["normalized_name"])
-                logger.info("Организация обновлена: id=%s normalized=%s fields=%s", org.id, normalized, ",".join(updates))
+                logger.info(
+                    "Организация обновлена: id=%s normalized=%s fields=%s",
+                    org.id,
+                    normalized,
+                    ",".join(updates),
+                )
             else:
-                logger.debug("Организация найдена: id=%s normalized=%s", org.id, normalized)
+                logger.debug(
+                    "Организация найдена: id=%s normalized=%s", org.id, normalized
+                )
             return org
 
         try:
@@ -65,12 +81,18 @@ class PositionResolver:
 
         position = Position.objects.filter(normalized_name=normalized).first()
         if position:
-            logger.debug("Должность найдена: id=%s normalized=%s", position.id, normalized)
+            logger.debug(
+                "Должность найдена: id=%s normalized=%s", position.id, normalized
+            )
             return position
 
         try:
-            position = Position.objects.create(name=display_name, normalized_name=normalized)
-            logger.info("Должность создана: id=%s normalized=%s", position.id, normalized)
+            position = Position.objects.create(
+                name=display_name, normalized_name=normalized
+            )
+            logger.info(
+                "Должность создана: id=%s normalized=%s", position.id, normalized
+            )
             return position
         except IntegrityError:
             return Position.objects.get(normalized_name=normalized)
@@ -90,7 +112,9 @@ class BrowserResolver:
             return browser
 
         try:
-            browser = Browser.objects.create(name=display_name, normalized_name=normalized)
+            browser = Browser.objects.create(
+                name=display_name, normalized_name=normalized
+            )
             logger.info("Браузер создан: id=%s normalized=%s", browser.id, normalized)
             return browser
         except IntegrityError:

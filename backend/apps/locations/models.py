@@ -6,8 +6,12 @@ from .normalization import normalize_organization_name
 
 class Organization(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название организации")
-    normalized_name = models.CharField(max_length=255, unique=True, verbose_name="Нормализованное название")
-    address = models.CharField(max_length=500, blank=True, default="", verbose_name="Адрес")
+    normalized_name = models.CharField(
+        max_length=255, unique=True, verbose_name="Нормализованное название"
+    )
+    address = models.CharField(
+        max_length=500, blank=True, default="", verbose_name="Адрес"
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
 
     class Meta:

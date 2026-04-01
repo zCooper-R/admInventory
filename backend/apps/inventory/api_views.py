@@ -28,26 +28,50 @@ def _verify_agent_key(request) -> bool:
 class DeviceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filterset_class = DeviceFilter
-    search_fields = ["inventory_number", "employee_name", "organization__name", "position__name", "browser__name", "cpu_model", "os"]
-    ordering_fields = ["inventory_number", "replacement_status", "replacement_score", "updated_at", "created_at"]
+    search_fields = [
+        "inventory_number",
+        "employee_name",
+        "organization__name",
+        "position__name",
+        "browser__name",
+        "cpu_model",
+        "os",
+    ]
+    ordering_fields = [
+        "inventory_number",
+        "replacement_status",
+        "replacement_score",
+        "updated_at",
+        "created_at",
+    ]
     ordering = ["inventory_number"]
 
     def get_queryset(self):
-        return Device.objects.select_related("organization", "position", "browser").all()
+        return Device.objects.select_related(
+            "organization", "position", "browser"
+        ).all()
 
     def get_serializer_class(self):
         if self.action == "list":
             return DeviceListSerializer
         return DeviceDetailSerializer
 
-    @action(detail=False, methods=["post"], url_path="sync", permission_classes=[AllowAny])
+    @action(
+        detail=False, methods=["post"], url_path="sync", permission_classes=[AllowAny]
+    )
     def sync(self, request):
         if not _verify_agent_key(request):
-            return Response({"error": "Invalid or missing X-Api-Key header."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "Invalid or missing X-Api-Key header."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         inv_number = (request.data.get("inventory_number") or "").strip()
         if not inv_number:
-            return Response({"error": "inventory_number is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "inventory_number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         defaults: dict = {
             "device_type": DeviceType.PC,
@@ -83,16 +107,31 @@ class DeviceViewSet(viewsets.ModelViewSet):
         if not defaults.get("organization"):
             existing = Device.objects.filter(inventory_number=inv_number).first()
             if not existing:
-                return Response({"error": "organization_id is required for new devices."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "organization_id is required for new devices."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        device, created = Device.objects.update_or_create(inventory_number=inv_number, defaults=defaults)
+        device, created = Device.objects.update_or_create(
+            inventory_number=inv_number, defaults=defaults
+        )
 
         if created and purchase_date_str:
             try:
                 device.purchase_date = date.fromisoformat(purchase_date_str)
-                device.save(update_fields=["purchase_date", "replacement_status", "replacement_score", "replacement_reason"])
+                device.save(
+                    update_fields=[
+                        "purchase_date",
+                        "replacement_status",
+                        "replacement_score",
+                        "replacement_reason",
+                    ]
+                )
             except ValueError:
                 pass
 
         serializer = DeviceDetailSerializer(device)
-        return Response({"created": created, "device": serializer.data}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+        return Response(
+            {"created": created, "device": serializer.data},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )

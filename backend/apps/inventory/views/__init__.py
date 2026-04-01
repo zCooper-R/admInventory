@@ -7,6 +7,7 @@ Import any view from this package directly:
 
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
+
 from apps.inventory.views.views_pc import (
     critical_count_partial,
     dashboard,

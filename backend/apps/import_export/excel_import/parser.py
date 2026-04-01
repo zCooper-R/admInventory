@@ -38,7 +38,13 @@ HEADER_ALIASES: dict[str, str] = {
     "должность": "position",
 }
 
-REQUIRED_HEADERS = {"organization_name", "inventory_number", "os", "ram", "storage_type"}
+REQUIRED_HEADERS = {
+    "organization_name",
+    "inventory_number",
+    "os",
+    "ram",
+    "storage_type",
+}
 DEVICE_ROW_KEYS = {
     "organization_name",
     "inventory_number",
@@ -95,7 +101,9 @@ def parse_excel(path: str) -> ParseResult:
     missing = REQUIRED_HEADERS - set(header_idx)
     if missing:
         missing_cols = ", ".join(sorted(missing))
-        raise ValueError(f"Отсутствуют обязательные колонки нового формата: {missing_cols}")
+        raise ValueError(
+            f"Отсутствуют обязательные колонки нового формата: {missing_cols}"
+        )
 
     parsed_rows: list[ParsedRow] = []
     total_rows = 0
@@ -110,7 +118,9 @@ def parse_excel(path: str) -> ParseResult:
             for field_name, idx in header_idx.items()
         }
 
-        mapped_values = [row_data.get(field_name, "") for field_name in header_idx.keys()]
+        mapped_values = [
+            row_data.get(field_name, "") for field_name in header_idx.keys()
+        ]
         if not any(mapped_values):
             skipped_empty_rows += 1
             continue

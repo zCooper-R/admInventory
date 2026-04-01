@@ -28,7 +28,9 @@ class TestExportMatchesTemplate:
         assert numbering == NUMBERING_ROW
 
     def test_export_file_can_be_imported_back(self):
-        browser = Browser.objects.create(name="Яндекс Браузер", normalized_name="яндекс браузер")
+        browser = Browser.objects.create(
+            name="Яндекс Браузер", normalized_name="яндекс браузер"
+        )
         position = Position.objects.create(name="Инженер", normalized_name="инженер")
 
         source = DeviceFactory(

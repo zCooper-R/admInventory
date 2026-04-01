@@ -17,6 +17,6 @@ How to release
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
-VERSION      = "0.1.0"
+VERSION = "0.1.0"
 RELEASE_DATE = "2026-03-29"
-APP_NAME     = "admInventory"
+APP_NAME = "admInventory"
