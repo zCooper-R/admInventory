@@ -10,7 +10,7 @@
           <tr class="table-header-row">
             <th class="ps-3 col-sticky-inv"><a class="sort-link" hx-get="{% sort_url 'inventory_number' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Инв. номер{% if sort == 'inventory_number' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="col-sticky-org"><a class="sort-link" hx-get="{% sort_url 'organization__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Организация{% if sort == 'organization__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'os' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">ОС{% if sort == 'os' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
+            <th><a class="sort-link" hx-get="{% sort_url 'os' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">ОС{% if sort == 'os' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'cpu_model' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Процессор{% if sort == 'cpu_model' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'cpu_frequency' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Частота{% if sort == 'cpu_frequency' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-md-table-cell"><a class="sort-link" hx-get="{% sort_url 'ram' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">ОЗУ{% if sort == 'ram' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
@@ -19,7 +19,7 @@
             <th><a class="sort-link" hx-get="{% sort_url 'employee_name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Сотрудник{% if sort == 'employee_name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'position__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Должность{% if sort == 'position__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th><a class="sort-link" hx-get="{% sort_url 'replacement_status' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Статус замены{% if sort == 'replacement_status' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'replacement_score' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Балл{% if sort == 'replacement_score' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
+            <th class="d-none d-lg-table-cell score-col text-center"><a class="sort-link justify-content-center w-100" hx-get="{% sort_url 'replacement_score' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Балл{% if sort == 'replacement_score' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="pe-3 text-end">Действия</th>
           </tr>
         </thead>
@@ -41,7 +41,7 @@
             <td class="col-sticky-org" title="{{ pc.organization.name }}">
               <span class="cell-clamp cell-org">{{ pc.organization.name }}</span>
             </td>
-            <td class="d-none d-lg-table-cell">{{ pc.os|default:'—' }}</td>
+            <td>{{ pc.os|default:'—' }}</td>
             <td class="d-none d-lg-table-cell text-muted small" title="{{ pc.cpu_model|default:'—' }}">
               <span class="cell-clamp cell-cpu">{{ pc.cpu_model|default:'—' }}</span>
             </td>
@@ -56,7 +56,7 @@
               <span class="cell-clamp cell-position">{{ pc.position.name|default:'—' }}</span>
             </td>
             <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
-            <td class="d-none d-lg-table-cell">{{ pc.replacement_score }}</td>
+            <td class="d-none d-lg-table-cell score-col text-center">{{ pc.replacement_score }}</td>
             <td class="pe-3 text-end">
               <div class="d-flex justify-content-end gap-1">
                 <button class="btn btn-sm btn-outline-primary action-btn" title="Редактировать" hx-get="{% url 'pc-edit-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML"><i class="bi bi-pencil"></i></button>
