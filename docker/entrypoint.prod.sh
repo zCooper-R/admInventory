@@ -2,7 +2,7 @@
 set -e
 
 echo "Waiting for PostgreSQL to be ready..."
-/app/docker/wait-for-postgres.sh
+/wait-for-postgres.sh
 
 echo "Ensuring required directories exist and are writable..."
 mkdir -p /app/logs /app/staticfiles /app/media

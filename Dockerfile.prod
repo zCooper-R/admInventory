@@ -21,14 +21,13 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY --chown=django:django backend/ .
 
-RUN mkdir -p /app/docker
-COPY --chown=django:django ./docker/entrypoint.prod.sh /app/docker/entrypoint.sh
-COPY --chown=django:django ./docker/wait-for-postgres.sh /app/docker/wait-for-postgres.sh
-RUN sed -i 's/\r$//' /app/docker/entrypoint.sh /app/docker/wait-for-postgres.sh && \
-    chmod +x /app/docker/entrypoint.sh /app/docker/wait-for-postgres.sh
+COPY --chown=django:django ./docker/entrypoint.prod.sh /entrypoint.sh
+COPY --chown=django:django ./docker/wait-for-postgres.sh /wait-for-postgres.sh
+RUN sed -i 's/\r$//' /entrypoint.sh /wait-for-postgres.sh && \
+    chmod +x /entrypoint.sh /wait-for-postgres.sh
 
 USER django
 
 EXPOSE 8000
 
-ENTRYPOINT ["/app/docker/entrypoint.prod.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
