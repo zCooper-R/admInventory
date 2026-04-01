@@ -32,7 +32,7 @@ services:
       DATABASE_PORT: 5432
     volumes:
       - ./backend:/app:rw
-      - ./logs:/app/logs
+      - logs_volume:/app/logs
       - media_volume:/app/media
       - static_volume:/app/staticfiles
     ports:
@@ -45,3 +45,4 @@ volumes:
   postgres_data:
   media_volume:
   static_volume:
+  logs_volume:
