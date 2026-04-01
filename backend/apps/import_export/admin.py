@@ -18,7 +18,12 @@ class ImportLogAdmin(admin.ModelAdmin):
         "error_count",
         "created_at",
     )
-    list_filter = ("status",)
+    list_filter = ("status", "created_at")
+    search_fields = ("file", "uploaded_by__username", "uploaded_by__email")
+    ordering = ("-created_at",)
+    date_hierarchy = "created_at"
+    list_per_page = 30
+    save_on_top = True
     readonly_fields = (
         "uploaded_by",
         "status",
@@ -26,27 +31,52 @@ class ImportLogAdmin(admin.ModelAdmin):
         "created_count",
         "updated_count",
         "error_count",
+        "errors_preview",
         "errors",
         "created_at",
     )
-    ordering = ("-created_at",)
+    fieldsets = (
+        ("Файл", {"fields": ("file", "uploaded_by", "created_at")}),
+        (
+            "Результат",
+            {
+                "fields": (
+                    "status",
+                    ("total_rows", "created_count", "updated_count", "error_count"),
+                    "errors_preview",
+                    "errors",
+                )
+            },
+        ),
+    )
 
     STATUS_COLORS = {
-        "pending": "#6c757d",
-        "processing": "#0dcaf0",
-        "success": "#198754",
-        "partial": "#fd7e14",
-        "failed": "#dc3545",
+        "pending": "#64748b",
+        "processing": "#0284c7",
+        "success": "#16a34a",
+        "partial": "#d97706",
+        "failed": "#dc2626",
     }
 
     @admin.display(description="Статус")
     def status_badge(self, obj):
         color = self.STATUS_COLORS.get(obj.status, "#6c757d")
         return format_html(
-            '<span style="background:{};color:#fff;padding:2px 8px;border-radius:4px;">{}</span>',
+            '<span style="background:{};color:#fff;padding:3px 10px;border-radius:999px;'
+            'font-weight:600;">{}</span>',
             color,
             obj.get_status_display(),
         )
+
+    @admin.display(description="Ошибки (кратко)")
+    def errors_preview(self, obj):
+        if not obj.errors:
+            return "—"
+        first = obj.errors[0]
+        text = str(first)
+        if len(text) > 180:
+            text = f"{text[:180]}..."
+        return text
 
     def save_model(self, request, obj, form, change):
         if not change:

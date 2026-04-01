@@ -111,55 +111,6 @@
   </div>
 </div>
 
-<div class="row g-4 mb-4">
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header bg-white border-bottom"><h6 class="mb-0 fw-semibold"><i class="bi bi-speedometer2 me-2 text-danger"></i>Узкие места</h6></div>
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"><span>Диски HDD</span><span class="badge bg-danger">{{ hdd_count }}</span></div>
-        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"><span>ОЗУ &lt; 8 ГБ</span><span class="badge bg-warning text-dark">{{ ram_lt_8 }}</span></div>
-        <div class="d-flex justify-content-between align-items-center py-2"><span>Слабые CPU</span><span class="badge bg-secondary">{{ weak_cpu_count }}</span></div>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-8">
-    <div class="card h-100">
-      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-semibold"><i class="bi bi-building me-2 text-primary"></i>Организации с наибольшим риском</h6>
-        <a href="{% url 'budget-report' %}" class="btn btn-sm btn-outline-primary">К отчёту замен</a>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th class="ps-3">Организация</th>
-                <th>Всего</th>
-                <th>Замена</th>
-                <th>Внимание</th>
-                <th class="pe-3">Индекс риска</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in top_risk_organizations %}
-              <tr>
-                <td class="ps-3 fw-medium">{{ row.organization__name }}</td>
-                <td>{{ row.total_devices }}</td>
-                <td><span class="badge bg-danger">{{ row.replace_count }}</span></td>
-                <td><span class="badge bg-warning text-dark">{{ row.attention_count }}</span></td>
-                <td class="pe-3"><span class="badge bg-primary">{{ row.risk_score }}</span></td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-4">Нет данных по организациям</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="row g-4">
   <div class="col-xl-6">
     <div class="card" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">

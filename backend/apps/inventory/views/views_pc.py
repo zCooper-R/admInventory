@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from apps.inventory.forms import PCFilterForm, PCForm
 from apps.inventory.models import Device, DeviceType, ReplacementStatus
-from apps.inventory.services.budget import get_cached_budget_report
+from apps.inventory.services.budget import build_budget_report, get_cached_budget_report
 from apps.inventory.views.common import htmx_close_and_refresh, is_htmx, pc_qs
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -71,15 +71,16 @@ def _apply_dashboard_filters(qs, request):
 def dashboard(request):
     base_qs = pc_qs(request.user)
     qs = _apply_dashboard_filters(base_qs, request)
-    budget_report = get_cached_budget_report()
 
     price_raw = request.GET.get("price_per_pc", "").strip()
-    settings_price = budget_report.price_per_pc
+    settings_price = get_cached_budget_report().price_per_pc
     try:
         price_per_pc = int(price_raw) if price_raw else int(settings_price)
     except ValueError:
         price_per_pc = int(settings_price)
     price_per_pc = max(1000, min(price_per_pc, 5_000_000))
+    # Global budget must be fresh, not from cache.
+    budget_report = build_budget_report()
 
     total = qs.count()
     replace_count = qs.filter(replacement_status=ReplacementStatus.REPLACE).count()
@@ -92,16 +93,6 @@ def dashboard(request):
     updated_30 = qs.filter(updated_at__gte=now - timedelta(days=30)).count()
     created_7 = qs.filter(created_at__gte=now - timedelta(days=7)).count()
     created_30 = qs.filter(created_at__gte=now - timedelta(days=30)).count()
-
-    hdd_count = qs.filter(storage_type="HDD").count()
-    ram_lt_8 = qs.filter(ram__lt=8).count()
-    weak_cpu_count = qs.filter(
-        Q(cpu_model__icontains="celeron")
-        | Q(cpu_model__icontains="pentium")
-        | Q(cpu_model__icontains="atom")
-        | Q(cpu_model__iregex=r"\bamd\s+a\d")
-        | Q(cpu_model__iregex=r"\bamd\s+e\d")
-    ).count()
 
     top_risk_organizations = list(
         qs.values("organization__name")
@@ -164,9 +155,6 @@ def dashboard(request):
             "updated_30": updated_30,
             "created_7": created_7,
             "created_30": created_30,
-            "hdd_count": hdd_count,
-            "ram_lt_8": ram_lt_8,
-            "weak_cpu_count": weak_cpu_count,
             "top_risk_organizations": top_risk_organizations,
             "dashboard_budget_cost": replace_count * price_per_pc,
             "status_chart_json": json.dumps(replacement_chart),
