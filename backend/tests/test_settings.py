@@ -198,23 +198,33 @@ class TestBudgetCache:
         assert report1.price_per_pc == report2.price_per_pc
 
     def test_budget_default_ordering_is_replace_attention_ok(self):
-        DeviceFactory(
+        ok = DeviceFactory(
             inventory_number="INV-OK",
+        )
+        attn = DeviceFactory(
+            inventory_number="INV-ATTN",
+        )
+        repl2 = DeviceFactory(
+            inventory_number="INV-REPL-2",
+        )
+        repl1 = DeviceFactory(
+            inventory_number="INV-REPL-1",
+        )
+        # Device.save() recalculates replacement fields from hardware.
+        # For this ordering unit test we set explicit statuses/scores directly.
+        type(ok).objects.filter(pk=ok.pk).update(
             replacement_status=ReplacementStatus.OK,
             replacement_score=9,
         )
-        DeviceFactory(
-            inventory_number="INV-ATTN",
+        type(attn).objects.filter(pk=attn.pk).update(
             replacement_status=ReplacementStatus.ATTENTION,
             replacement_score=3,
         )
-        DeviceFactory(
-            inventory_number="INV-REPL-2",
+        type(repl2).objects.filter(pk=repl2.pk).update(
             replacement_status=ReplacementStatus.REPLACE,
             replacement_score=4,
         )
-        DeviceFactory(
-            inventory_number="INV-REPL-1",
+        type(repl1).objects.filter(pk=repl1.pk).update(
             replacement_status=ReplacementStatus.REPLACE,
             replacement_score=2,
         )

@@ -7,7 +7,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ("id", "name", "normalized_name", "address", "created_at")
-        read_only_fields = ("created_at",)
+        read_only_fields = ("normalized_name", "created_at")
 
 
 class LocationSerializer(serializers.ModelSerializer):

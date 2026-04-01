@@ -9,8 +9,9 @@ def migrate_device_data(apps, schema_editor):
     Device = apps.get_model("inventory", "Device")
     Organization = apps.get_model("locations", "Organization")
 
+    has_devices = Device.objects.exists()
     fallback_org = Organization.objects.order_by("id").first()
-    if fallback_org is None:
+    if has_devices and fallback_org is None:
         fallback_org = Organization.objects.create(
             name="Неизвестная организация",
             normalized_name="неизвестная организация",
@@ -23,7 +24,12 @@ def migrate_device_data(apps, schema_editor):
         if device.location_id:
             org = device.location.organization
 
-        device.organization_id = (org or fallback_org).id
+        if org:
+            device.organization_id = org.id
+        elif fallback_org:
+            device.organization_id = fallback_org.id
+        else:
+            continue
 
         if device.storage_type in {"Mixed", "None", "", None}:
             device.storage_type = "HDD"
