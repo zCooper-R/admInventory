@@ -12,6 +12,7 @@ from datetime import datetime
 from apps.import_export.models import ImportLog
 from apps.import_export.services import process_excel_import
 from apps.inventory.forms import PCImportForm
+from apps.inventory.models import Device, DeviceType, ReplacementStatus
 from apps.inventory.services.export import export_pcs_to_excel
 from apps.inventory.services.template_excel import build_import_template_bytes
 from django.contrib import messages
@@ -98,7 +99,23 @@ def pc_export(request):
     as a browser download attachment.
     """
     try:
-        excel_bytes = export_pcs_to_excel()
+        queryset = Device.objects.filter(device_type=DeviceType.PC)
+        organization_id = request.GET.get("organization", "").strip()
+        replacement_status = request.GET.get("replacement_status", "").strip()
+        storage_type = request.GET.get("storage_type", "").strip()
+
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        if replacement_status in {
+            ReplacementStatus.OK,
+            ReplacementStatus.ATTENTION,
+            ReplacementStatus.REPLACE,
+        }:
+            queryset = queryset.filter(replacement_status=replacement_status)
+        if storage_type in {"SSD", "HDD"}:
+            queryset = queryset.filter(storage_type=storage_type)
+
+        excel_bytes = export_pcs_to_excel(queryset=queryset)
         filename = f"computers_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         response = HttpResponse(
             excel_bytes,

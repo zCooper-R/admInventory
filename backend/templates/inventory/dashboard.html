@@ -11,120 +11,214 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Дашборд</h1>
-    <p class="page-subtitle">Обзор парка компьютеров по новой целевой модели</p>
+    <p class="page-subtitle">Информативный обзор парка компьютеров с фильтрами и аналитикой риска</p>
   </div>
   <div class="d-flex gap-2 flex-wrap">
     <button class="btn btn-primary" hx-get="{% url 'pc-create-modal' %}" hx-target="#modal-container" hx-swap="innerHTML">
       <i class="bi bi-plus-lg me-1"></i>Добавить устройство
     </button>
     <a href="{% url 'pc-import' %}" class="btn btn-outline-secondary"><i class="bi bi-upload me-1"></i>Импорт</a>
-    <a href="{% url 'pc-export' %}" class="btn btn-outline-success"><i class="bi bi-download me-1"></i>Экспорт</a>
+    <a href="{{ export_url }}" class="btn btn-outline-success"><i class="bi bi-download me-1"></i>Экспорт по фильтру</a>
   </div>
 </div>
 
-{% if budget_report.replacement_count %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Организация</label>
+        <select name="organization" class="form-select">
+          <option value="">Все организации</option>
+          {% for org in organizations %}
+          <option value="{{ org.organization_id }}" {% if selected_organization == org.organization_id|stringformat:'s' %}selected{% endif %}>{{ org.organization__name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Статус замены</label>
+        <select name="replacement_status" class="form-select">
+          <option value="">Все статусы</option>
+          <option value="replace" {% if selected_replacement_status == 'replace' %}selected{% endif %}>Требует замены</option>
+          <option value="attention" {% if selected_replacement_status == 'attention' %}selected{% endif %}>Требует внимания</option>
+          <option value="ok" {% if selected_replacement_status == 'ok' %}selected{% endif %}>Норма</option>
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label">Тип диска</label>
+        <select name="storage_type" class="form-select">
+          <option value="">Все</option>
+          <option value="SSD" {% if selected_storage_type == 'SSD' %}selected{% endif %}>SSD</option>
+          <option value="HDD" {% if selected_storage_type == 'HDD' %}selected{% endif %}>HDD</option>
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label">Цена замены (₽)</label>
+        <input type="number" min="1000" step="1000" name="price_per_pc" value="{{ price_per_pc }}" class="form-control">
+      </div>
+      <div class="col-lg-2 col-md-4 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Применить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="row g-3 mb-4">
-  <div class="col-md-6 col-xl-4">
-    <div class="alert alert-danger border-start border-5 border-danger shadow-sm rounded-3 py-3 px-4 mb-0">
-      <div class="d-flex align-items-start gap-3">
-        <i class="bi bi-exclamation-octagon-fill fs-3 text-danger mt-1"></i>
-        <div>
-          <div class="fw-bold mb-1">{{ replace_count }} устройств требуют замены</div>
-          <div class="small text-danger-emphasis">Статус: требует замены</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6 col-xl-4">
-    <div class="alert alert-warning border-start border-5 border-warning shadow-sm rounded-3 py-3 px-4 mb-0">
-      <div class="d-flex align-items-start gap-3">
-        <i class="bi bi-arrow-repeat fs-3 text-warning mt-1"></i>
-        <div>
-          <div class="fw-bold mb-1">{{ attention_count }} в зоне внимания</div>
-          <div class="small text-warning-emphasis">Пограничные характеристики</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-4">
-    <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
-      <div class="card-body py-3 px-4">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-cash-coin"></i></div>
-          <div>
-            <div class="small text-muted">Оценочный бюджет замен</div>
-            <div class="fw-bold fs-5 text-info">{{ budget_report.total_cost|rubles }}</div>
-            <div class="small text-muted">{{ budget_report.replacement_count }} устройств</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<div class="row g-4 mb-4">
   <div class="col-sm-6 col-xl-3">
     <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-pc-display"></i></div><div><div class="stat-value text-primary">{{ total }}</div><div class="stat-label">Всего устройств</div></div></div></div></div>
   </div>
   <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-check-circle"></i></div><div><div class="stat-value text-success">{{ ok_count }}</div><div class="stat-label">Норма</div></div></div></div></div>
+    <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-octagon"></i></div><div><div class="stat-value text-danger">{{ replace_count }}</div><div class="stat-label">Требуют замены</div></div></div></div></div>
   </div>
   <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-exclamation-triangle"></i></div><div><div class="stat-value text-warning">{{ attention_count }}</div><div class="stat-label">Внимание</div></div></div></div></div>
+    <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-exclamation-triangle"></i></div><div><div class="stat-value text-warning">{{ attention_count }}</div><div class="stat-label">Требуют внимания</div></div></div></div></div>
   </div>
   <div class="col-sm-6 col-xl-3">
-    <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-archive"></i></div><div><div class="stat-value text-danger">{{ replace_count }}</div><div class="stat-label">К замене</div></div></div></div></div>
+    <div class="card stat-card"><div class="card-body"><div class="d-flex align-items-center gap-3"><div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-percent"></i></div><div><div class="stat-value text-info">{{ critical_pct }}%</div><div class="stat-label">Доля критичных</div></div></div></div></div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100"><div class="card-body"><div class="text-muted small mb-1">Обновлено за 7 дней</div><div class="fs-4 fw-bold">{{ updated_7 }}</div><div class="text-muted small mt-2">За 30 дней: {{ updated_30 }}</div></div></div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100"><div class="card-body"><div class="text-muted small mb-1">Новых за 7 дней</div><div class="fs-4 fw-bold">{{ created_7 }}</div><div class="text-muted small mt-2">За 30 дней: {{ created_30 }}</div></div></div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100"><div class="card-body"><div class="text-muted small mb-1">Оценочный бюджет замен</div><div class="fs-4 fw-bold text-danger">{{ dashboard_budget_cost|rubles }}</div><div class="text-muted small mt-2">{{ replace_count }} устройств × {{ price_per_pc|rubles }}</div></div></div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100"><div class="card-body"><div class="text-muted small mb-1">Глобальный бюджет (все ПК)</div><div class="fs-4 fw-bold text-primary">{{ budget_report.total_cost|rubles }}</div><div class="text-muted small mt-2">Текущий системный расчёт</div></div></div>
   </div>
 </div>
 
 <div class="row g-4 mb-4">
-  <div class="col-md-4">
+  <div class="col-md-5">
     <div class="card h-100" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-      <div class="card-header bg-white border-bottom" style="border-radius:12px 12px 0 0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-pie-chart me-2 text-primary"></i>Распределение replacement</h6></div>
+      <div class="card-header bg-white border-bottom" style="border-radius:12px 12px 0 0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-pie-chart me-2 text-primary"></i>Распределение статусов</h6></div>
       <div class="card-body d-flex align-items-center justify-content-center p-3">
-        {% if total %}<div style="position:relative;height:240px;width:100%;"><canvas id="statusChart"></canvas></div>{% else %}<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Нет данных</div>{% endif %}
+        {% if total %}<div style="position:relative;height:260px;width:100%;"><canvas id="statusChart"></canvas></div>{% else %}<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Нет данных</div>{% endif %}
       </div>
     </div>
   </div>
-  <div class="col-md-8">
+  <div class="col-md-7">
     <div class="card h-100" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-      <div class="card-header bg-white border-bottom" style="border-radius:12px 12px 0 0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-bar-chart me-2 text-primary"></i>Устройства по организациям</h6></div>
+      <div class="card-header bg-white border-bottom" style="border-radius:12px 12px 0 0;"><h6 class="mb-0 fw-semibold"><i class="bi bi-bar-chart me-2 text-primary"></i>Риск по организациям (TOP 8)</h6></div>
       <div class="card-body p-3">
-        {% if total %}<div style="position:relative;height:240px;width:100%;"><canvas id="locationChart"></canvas></div>{% else %}<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Нет данных</div>{% endif %}
+        {% if top_risk_organizations %}<div style="position:relative;height:260px;width:100%;"><canvas id="locationChart"></canvas></div>{% else %}<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Нет данных</div>{% endif %}
       </div>
     </div>
   </div>
 </div>
 
-<div class="card" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-  <div class="card-header bg-white d-flex align-items-center justify-content-between" style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
-    <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-primary"></i>Последние изменения</h6>
-    <a href="{% url 'pc-list' %}" class="btn btn-sm btn-outline-primary">Все устройства <i class="bi bi-arrow-right ms-1"></i></a>
+<div class="row g-4 mb-4">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header bg-white border-bottom"><h6 class="mb-0 fw-semibold"><i class="bi bi-speedometer2 me-2 text-danger"></i>Узкие места</h6></div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"><span>Диски HDD</span><span class="badge bg-danger">{{ hdd_count }}</span></div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"><span>ОЗУ &lt; 8 ГБ</span><span class="badge bg-warning text-dark">{{ ram_lt_8 }}</span></div>
+        <div class="d-flex justify-content-between align-items-center py-2"><span>Слабые CPU</span><span class="badge bg-secondary">{{ weak_cpu_count }}</span></div>
+      </div>
+    </div>
   </div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead>
-          <tr class="table-header-row"><th class="ps-4">Инв. номер</th><th>Организация</th><th>Сотрудник</th><th>Должность</th><th>ОЗУ</th><th>Диск</th><th>Статус замены</th><th class="pe-4">Обновлён</th></tr>
-        </thead>
-        <tbody>
-          {% for pc in recent_pcs %}
-          <tr>
-            <td class="ps-4"><a href="#" class="fw-medium text-decoration-none link-primary" hx-get="{% url 'pc-edit-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML">{{ pc.inventory_number|default:'—' }}</a></td>
-            <td>{{ pc.organization.name }}</td>
-            <td>{{ pc.employee_name|default:'—' }}</td>
-            <td>{{ pc.position.name|default:'—' }}</td>
-            <td>{% if pc.ram %}<span class="badge bg-light text-dark border">{{ pc.ram }} ГБ</span>{% else %}—{% endif %}</td>
-            <td class="text-muted small">{{ pc.storage_type }}{% if pc.storage_size %} {{ pc.storage_size }}ГБ{% endif %}</td>
-            <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
-            <td class="text-muted small pe-4">{{ pc.updated_at|date:"d.m.Y" }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>Устройства ещё не добавлены</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-building me-2 text-primary"></i>Организации с наибольшим риском</h6>
+        <a href="{% url 'budget-report' %}" class="btn btn-sm btn-outline-primary">К отчёту замен</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-3">Организация</th>
+                <th>Всего</th>
+                <th>Замена</th>
+                <th>Внимание</th>
+                <th class="pe-3">Индекс риска</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in top_risk_organizations %}
+              <tr>
+                <td class="ps-3 fw-medium">{{ row.organization__name }}</td>
+                <td>{{ row.total_devices }}</td>
+                <td><span class="badge bg-danger">{{ row.replace_count }}</span></td>
+                <td><span class="badge bg-warning text-dark">{{ row.attention_count }}</span></td>
+                <td class="pe-3"><span class="badge bg-primary">{{ row.risk_score }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-4">Нет данных по организациям</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-6">
+    <div class="card" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between" style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-activity me-2 text-danger"></i>Критичные и пограничные устройства</h6>
+        <a href="{% url 'pc-list' %}?replacement_status=replace" class="btn btn-sm btn-outline-danger">Открыть список</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr class="table-header-row"><th class="ps-4">Инв. номер</th><th>Организация</th><th>Сотрудник</th><th>Статус</th><th class="pe-4">Балл</th></tr></thead>
+            <tbody>
+              {% for pc in critical_devices %}
+              <tr>
+                <td class="ps-4"><a href="#" class="fw-medium text-decoration-none link-primary" hx-get="{% url 'pc-edit-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML">{{ pc.inventory_number|default:'—' }}</a></td>
+                <td>{{ pc.organization.name }}</td>
+                <td>{{ pc.employee_name|default:'—' }}</td>
+                <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
+                <td class="pe-4">{{ pc.replacement_score }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-5"><i class="bi bi-check2-circle fs-2 d-block mb-2 opacity-25"></i>Критичных устройств нет</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card" style="border-radius:12px;border:none;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between" style="border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-primary"></i>Последние изменения</h6>
+        <a href="{% url 'pc-list' %}" class="btn btn-sm btn-outline-primary">Все устройства <i class="bi bi-arrow-right ms-1"></i></a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr class="table-header-row"><th class="ps-4">Инв. номер</th><th>Организация</th><th>Сотрудник</th><th>Диск</th><th>Статус</th><th class="pe-4">Обновлён</th></tr>
+            </thead>
+            <tbody>
+              {% for pc in recent_pcs %}
+              <tr>
+                <td class="ps-4"><a href="#" class="fw-medium text-decoration-none link-primary" hx-get="{% url 'pc-edit-modal' pc.pk %}" hx-target="#modal-container" hx-swap="innerHTML">{{ pc.inventory_number|default:'—' }}</a></td>
+                <td>{{ pc.organization.name }}</td>
+                <td>{{ pc.employee_name|default:'—' }}</td>
+                <td class="text-muted small">{{ pc.storage_type }}{% if pc.storage_size %} {{ pc.storage_size }}ГБ{% endif %}</td>
+                <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
+                <td class="text-muted small pe-4">{{ pc.updated_at|date:"d.m.Y H:i" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>Устройства ещё не добавлены</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -140,10 +234,31 @@ new Chart(document.getElementById('statusChart'), {
   data: { labels: statusData.labels, datasets: [{ data: statusData.data, backgroundColor: statusData.colors, borderWidth: 3, borderColor: '#fff' }] },
   options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 12 }, usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} шт.` } } } }
 });
+
 new Chart(document.getElementById('locationChart'), {
   type: 'bar',
-  data: { labels: locationData.labels, datasets: [{ label: 'Количество устройств', data: locationData.data, backgroundColor: 'rgba(37,99,235,0.75)', borderRadius: 6, borderSkipped: false }] },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} шт.` } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false }, ticks: { maxRotation: 35, font: { size: 11 } } } } }
+  data: {
+    labels: locationData.labels,
+    datasets: [{
+      label: 'Индекс риска',
+      data: locationData.data,
+      backgroundColor: 'rgba(239,68,68,0.75)',
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.raw} баллов риска` } }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } },
+      x: { grid: { display: false }, ticks: { maxRotation: 35, font: { size: 11 } } }
+    }
+  }
 });
 </script>
 {% endif %}

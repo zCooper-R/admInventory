@@ -45,9 +45,10 @@ def _frequency_to_text(value: Decimal | None) -> str:
     return f"{value:.2f}"
 
 
-def export_pcs_to_excel() -> bytes:
+def export_pcs_to_excel(queryset=None) -> bytes:
+    devices_qs = queryset if queryset is not None else Device.objects.all()
     devices = (
-        Device.objects.filter(device_type=DeviceType.PC)
+        devices_qs.filter(device_type=DeviceType.PC)
         .select_related("organization", "browser", "position")
         .order_by("organization__name", "inventory_number")
     )

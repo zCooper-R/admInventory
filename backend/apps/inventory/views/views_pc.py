@@ -2,6 +2,7 @@
 
 import json
 import logging
+from datetime import timedelta
 
 from apps.inventory.forms import PCFilterForm, PCForm
 from apps.inventory.models import Device, DeviceType, ReplacementStatus
@@ -10,10 +11,11 @@ from apps.inventory.views.common import htmx_close_and_refresh, is_htmx, pc_qs
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, F, Q, Value
+from django.db.models import Case, Count, F, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import Coalesce, Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 _PAGE_SIZE = 25
 logger = logging.getLogger(__name__)
@@ -46,42 +48,145 @@ def _apply_sorting(qs, sort: str, direction: str):
     return qs.order_by(order_expr, "id")
 
 
+def _apply_dashboard_filters(qs, request):
+    organization_id = request.GET.get("organization", "").strip()
+    replacement_status = request.GET.get("replacement_status", "").strip()
+    storage_type = request.GET.get("storage_type", "").strip()
+
+    if organization_id:
+        qs = qs.filter(organization_id=organization_id)
+    if replacement_status in {
+        ReplacementStatus.OK,
+        ReplacementStatus.ATTENTION,
+        ReplacementStatus.REPLACE,
+    }:
+        qs = qs.filter(replacement_status=replacement_status)
+    if storage_type in {"SSD", "HDD"}:
+        qs = qs.filter(storage_type=storage_type)
+
+    return qs
+
+
 @login_required
 def dashboard(request):
-    qs = pc_qs(request.user)
+    base_qs = pc_qs(request.user)
+    qs = _apply_dashboard_filters(base_qs, request)
+    budget_report = get_cached_budget_report()
+
+    price_raw = request.GET.get("price_per_pc", "").strip()
+    settings_price = budget_report.price_per_pc
+    try:
+        price_per_pc = int(price_raw) if price_raw else int(settings_price)
+    except ValueError:
+        price_per_pc = int(settings_price)
+    price_per_pc = max(1000, min(price_per_pc, 5_000_000))
+
     total = qs.count()
     replace_count = qs.filter(replacement_status=ReplacementStatus.REPLACE).count()
     attention_count = qs.filter(replacement_status=ReplacementStatus.ATTENTION).count()
     ok_count = qs.filter(replacement_status=ReplacementStatus.OK).count()
+    critical_pct = round((replace_count / total) * 100, 1) if total else 0
+
+    now = timezone.now()
+    updated_7 = qs.filter(updated_at__gte=now - timedelta(days=7)).count()
+    updated_30 = qs.filter(updated_at__gte=now - timedelta(days=30)).count()
+    created_7 = qs.filter(created_at__gte=now - timedelta(days=7)).count()
+    created_30 = qs.filter(created_at__gte=now - timedelta(days=30)).count()
+
+    hdd_count = qs.filter(storage_type="HDD").count()
+    ram_lt_8 = qs.filter(ram__lt=8).count()
+    weak_cpu_count = qs.filter(
+        Q(cpu_model__icontains="celeron")
+        | Q(cpu_model__icontains="pentium")
+        | Q(cpu_model__icontains="atom")
+        | Q(cpu_model__iregex=r"\bamd\s+a\d")
+        | Q(cpu_model__iregex=r"\bamd\s+e\d")
+    ).count()
+
+    top_risk_organizations = list(
+        qs.values("organization__name")
+        .annotate(
+            total_devices=Count("id"),
+            replace_count=Sum(
+                Case(
+                    When(replacement_status=ReplacementStatus.REPLACE, then=1),
+                    default=0,
+                    output_field=IntegerField(),
+                )
+            ),
+            attention_count=Sum(
+                Case(
+                    When(replacement_status=ReplacementStatus.ATTENTION, then=1),
+                    default=0,
+                    output_field=IntegerField(),
+                )
+            ),
+        )
+        .annotate(risk_score=F("replace_count") * 2 + F("attention_count"))
+        .order_by("-risk_score", "-replace_count", "organization__name")[:8]
+    )
 
     replacement_chart = {
         "labels": ["Норма", "Внимание", "Замена"],
         "data": [ok_count, attention_count, replace_count],
         "colors": ["#16a34a", "#d97706", "#dc2626"],
     }
-    org_qs = (
-        qs.values("organization__name")
-        .annotate(count=Count("id"))
-        .order_by("-count")[:12]
-    )
     org_chart = {
-        "labels": [i["organization__name"] for i in org_qs],
-        "data": [i["count"] for i in org_qs],
+        "labels": [i["organization__name"] for i in top_risk_organizations],
+        "data": [i["risk_score"] for i in top_risk_organizations],
     }
+
+    export_params = request.GET.copy()
+    export_params.pop("page", None)
+    export_url = "/pcs/export/"
+    if export_params.urlencode():
+        export_url += f"?{export_params.urlencode()}"
 
     return render(
         request,
         "inventory/dashboard.html",
         {
             "nav_active": "dashboard",
+            "organizations": base_qs.values("organization_id", "organization__name")
+            .distinct()
+            .order_by("organization__name"),
+            "selected_organization": request.GET.get("organization", ""),
+            "selected_replacement_status": request.GET.get("replacement_status", ""),
+            "selected_storage_type": request.GET.get("storage_type", ""),
+            "price_per_pc": price_per_pc,
+            "export_url": export_url,
             "total": total,
             "replace_count": replace_count,
             "attention_count": attention_count,
             "ok_count": ok_count,
+            "critical_pct": critical_pct,
+            "updated_7": updated_7,
+            "updated_30": updated_30,
+            "created_7": created_7,
+            "created_30": created_30,
+            "hdd_count": hdd_count,
+            "ram_lt_8": ram_lt_8,
+            "weak_cpu_count": weak_cpu_count,
+            "top_risk_organizations": top_risk_organizations,
+            "dashboard_budget_cost": replace_count * price_per_pc,
             "status_chart_json": json.dumps(replacement_chart),
             "location_chart_json": json.dumps(org_chart),
             "recent_pcs": qs.order_by("-updated_at")[:8],
-            "budget_report": get_cached_budget_report(),
+            "critical_devices": qs.filter(
+                replacement_status__in=[
+                    ReplacementStatus.REPLACE,
+                    ReplacementStatus.ATTENTION,
+                ]
+            )
+            .annotate(
+                status_order=Case(
+                    When(replacement_status=ReplacementStatus.REPLACE, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("status_order", "replacement_score", "-updated_at")[:10],
+            "budget_report": budget_report,
         },
     )
 
