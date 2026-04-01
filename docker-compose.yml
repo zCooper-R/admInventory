@@ -30,6 +30,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
       LOG_DIR: /app/logs
+    user: "0:0"
     volumes:
       - ./backend:/app
       - ./logs:/app/logs
