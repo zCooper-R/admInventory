@@ -38,15 +38,23 @@
               </div>
               <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">{{ pc.employee_name|default:'—' }}</div>
             </td>
-            <td class="col-sticky-org cell-org" title="{{ pc.organization.name }}">{{ pc.organization.name }}</td>
+            <td class="col-sticky-org" title="{{ pc.organization.name }}">
+              <span class="cell-clamp cell-org">{{ pc.organization.name }}</span>
+            </td>
             <td class="d-none d-lg-table-cell">{{ pc.os|default:'—' }}</td>
-            <td class="d-none d-lg-table-cell text-muted small cell-cpu" title="{{ pc.cpu_model|default:'—' }}">{{ pc.cpu_model|default:'—' }}</td>
+            <td class="d-none d-lg-table-cell text-muted small" title="{{ pc.cpu_model|default:'—' }}">
+              <span class="cell-clamp cell-cpu">{{ pc.cpu_model|default:'—' }}</span>
+            </td>
             <td class="d-none d-xl-table-cell">{{ pc.cpu_frequency|default:'—' }}</td>
             <td class="d-none d-md-table-cell">{% if pc.ram %}<span class="badge bg-light text-dark border">{{ pc.ram }} ГБ</span>{% else %}—{% endif %}</td>
             <td class="d-none d-lg-table-cell">{{ pc.storage_type|default:'—' }}</td>
             <td class="d-none d-xl-table-cell">{{ pc.storage_size|default:'—' }}</td>
-            <td class="cell-employee" title="{{ pc.employee_name|default:'—' }}">{{ pc.employee_name|default:'—' }}</td>
-            <td class="d-none d-xl-table-cell cell-position" title="{{ pc.position.name|default:'—' }}">{{ pc.position.name|default:'—' }}</td>
+            <td title="{{ pc.employee_name|default:'—' }}">
+              <span class="cell-clamp cell-employee">{{ pc.employee_name|default:'—' }}</span>
+            </td>
+            <td class="d-none d-xl-table-cell" title="{{ pc.position.name|default:'—' }}">
+              <span class="cell-clamp cell-position">{{ pc.position.name|default:'—' }}</span>
+            </td>
             <td><span class="badge {% if pc.replacement_status == 'replace' %}bg-danger{% elif pc.replacement_status == 'attention' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pc.get_replacement_status_display }}</span></td>
             <td class="d-none d-lg-table-cell">{{ pc.replacement_score }}</td>
             <td class="pe-3 text-end">

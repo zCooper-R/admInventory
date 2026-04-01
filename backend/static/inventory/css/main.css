@@ -467,10 +467,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.cell-org,
-.cell-cpu,
-.cell-employee,
-.cell-position {
+.cell-clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
