@@ -3,18 +3,17 @@
 import json
 import logging
 
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.http import HttpResponse
-from django.db.models import Count, F, Q, Value
-from django.db.models.functions import Coalesce, Lower
-from django.shortcuts import get_object_or_404, redirect, render
-
 from apps.inventory.forms import PCFilterForm, PCForm
 from apps.inventory.models import Device, DeviceType, ReplacementStatus
 from apps.inventory.services.budget import get_cached_budget_report
 from apps.inventory.views.common import htmx_close_and_refresh, is_htmx, pc_qs
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, F, Q, Value
+from django.db.models.functions import Coalesce, Lower
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 
 _PAGE_SIZE = 25
 logger = logging.getLogger(__name__)

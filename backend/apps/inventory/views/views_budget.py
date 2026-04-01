@@ -1,9 +1,8 @@
 import logging
 
+from apps.inventory.services.budget import build_budget_report, get_cached_budget_report
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-
-from apps.inventory.services.budget import build_budget_report, get_cached_budget_report
 
 logger = logging.getLogger(__name__)
 

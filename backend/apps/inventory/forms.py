@@ -1,6 +1,4 @@
-﻿from django import forms
-
-from apps.inventory.models import (
+﻿from apps.inventory.models import (
     Browser,
     Device,
     InternetSpeed,
@@ -10,6 +8,7 @@ from apps.inventory.models import (
     SystemSettings,
 )
 from apps.locations.models import Organization
+from django import forms
 
 _FC = "form-control"
 _FS = "form-select"

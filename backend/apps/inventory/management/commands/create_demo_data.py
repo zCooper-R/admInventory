@@ -4,13 +4,12 @@ import json
 import random
 from pathlib import Path
 
-from django.core.management.base import BaseCommand
-from django.db import transaction
-
 from apps.inventory.models import Device, DeviceType, StorageType
 from apps.locations.models import Organization
 from apps.locations.normalization import normalize_organization_name
 from apps.users.models import User, UserRole
+from django.core.management.base import BaseCommand
+from django.db import transaction
 
 _FIXTURE_PATH = Path(__file__).resolve().parents[4] / "fixtures" / "demo_data.json"
 _RNG = random.Random(2024)

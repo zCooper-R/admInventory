@@ -15,12 +15,11 @@ Author : Литвин Олег Олегович <qucooper@yandex.ru>
 
 from pathlib import Path
 
-from django.core.management.base import BaseCommand
-
 from apps.inventory.services.template_excel import (
     SAMPLE_ROWS,
     build_import_template_bytes,
 )
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):

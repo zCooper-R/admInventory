@@ -2,13 +2,13 @@
 
 import openpyxl
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
-
 from apps.import_export.models import ImportLog, ImportStatus
 from apps.import_export.services import process_excel_import
 from apps.inventory.models import Browser, Device, InternetSpeed, Position
 from apps.inventory.services.export import export_pcs_to_excel
 from apps.inventory.services.template_excel import COLUMNS, NUMBERING_ROW
+from django.core.files.uploadedfile import SimpleUploadedFile
+
 from .factories import AdminUserFactory, DeviceFactory
 
 

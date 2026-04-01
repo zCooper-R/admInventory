@@ -1,9 +1,8 @@
 ﻿"""Inventory app models."""
 
+from apps.locations.models import Organization
 from django.db import models
 from django.db.models import Q
-
-from apps.locations.models import Organization
 
 
 class DeviceType(models.TextChoices):

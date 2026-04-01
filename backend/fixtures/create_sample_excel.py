@@ -3,8 +3,9 @@ Run this script to generate a sample Excel file for import testing.
 Usage: python fixtures/create_sample_excel.py
 """
 
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 data = [
     {

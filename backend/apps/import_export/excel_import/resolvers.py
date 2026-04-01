@@ -2,10 +2,9 @@
 
 import logging
 
-from django.db import IntegrityError
-
 from apps.inventory.models import Browser, Position
 from apps.locations.models import Organization
+from django.db import IntegrityError
 
 from .normalizers import (
     normalize_browser,

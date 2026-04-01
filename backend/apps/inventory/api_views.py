@@ -2,17 +2,16 @@
 import logging
 from datetime import date
 
+from apps.inventory.filters import DeviceFilter
+from apps.inventory.models import Device, DeviceType
+from apps.inventory.serializers import DeviceDetailSerializer, DeviceListSerializer
+from apps.locations.models import Organization
 from django.conf import settings
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
-from apps.inventory.filters import DeviceFilter
-from apps.inventory.models import Device, DeviceType
-from apps.inventory.serializers import DeviceDetailSerializer, DeviceListSerializer
-from apps.locations.models import Organization
 
 logger = logging.getLogger(__name__)
 

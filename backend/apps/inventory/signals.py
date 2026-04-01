@@ -10,11 +10,10 @@ Device post_save / post_delete
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
-from django.db.models.signals import post_delete, post_save
-from django.dispatch import receiver
-
 from apps.inventory.models import Device
 from apps.inventory.services.budget import invalidate_budget_cache
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
 
 
 @receiver([post_save, post_delete], sender=Device)

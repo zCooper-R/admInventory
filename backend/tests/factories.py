@@ -1,9 +1,8 @@
 ﻿import factory
-from factory.django import DjangoModelFactory
-
+from apps.inventory.models import Device, DeviceType, ReplacementStatus, StorageType
+from apps.locations.models import Location, Organization
 from apps.users.models import User, UserRole
-from apps.locations.models import Organization, Location
-from apps.inventory.models import Device, DeviceType, StorageType, ReplacementStatus
+from factory.django import DjangoModelFactory
 
 
 class UserFactory(DjangoModelFactory):

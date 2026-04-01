@@ -1,8 +1,8 @@
 ﻿import pytest
+from apps.inventory.models import ReplacementStatus
 from django.test import Client
 from django.urls import reverse
 
-from apps.inventory.models import ReplacementStatus
 from .factories import AdminUserFactory, DeviceFactory
 
 

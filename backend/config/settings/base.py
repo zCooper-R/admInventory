@@ -1,5 +1,6 @@
-from pathlib import Path
 import os
+from pathlib import Path
+
 import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -161,7 +162,10 @@ LOGGING = {
             "style": "{",
         },
         "detailed": {
-            "format": "{asctime} | {levelname:<8} | {name} | pid={process:d} tid={thread:d} | {module}:{lineno} | {message}",
+            "format": (
+                "{asctime} | {levelname:<8} | {name} | pid={process:d} "
+                "tid={thread:d} | {module}:{lineno} | {message}"
+            ),
             "style": "{",
         },
         "audit": {

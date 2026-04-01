@@ -3,9 +3,8 @@
 import logging
 from dataclasses import dataclass
 
-from django.db import transaction
-
 from apps.inventory.models import Device, DeviceType
+from django.db import transaction
 
 from .normalizers import (
     normalize_text,

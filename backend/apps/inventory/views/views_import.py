@@ -9,16 +9,15 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.shortcuts import redirect, render
-
 from apps.import_export.models import ImportLog
 from apps.import_export.services import process_excel_import
 from apps.inventory.forms import PCImportForm
 from apps.inventory.services.export import export_pcs_to_excel
 from apps.inventory.services.template_excel import build_import_template_bytes
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,8 @@ def pc_import(request):
 
     GET  → show the upload form and the 8 most-recent import logs.
     POST → validate the uploaded file, create an :class:`~apps.import_export.models.ImportLog`
-           record, and delegate processing to :func:`~apps.import_export.services.process_excel_import`.
+           record, and delegate processing to
+           :func:`~apps.import_export.services.process_excel_import`.
     """
     if request.method == "POST":
         form = PCImportForm(request.POST, request.FILES)

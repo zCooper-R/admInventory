@@ -8,13 +8,12 @@ from __future__ import annotations
 
 import logging
 
+from apps.inventory.forms import SystemSettingsForm
+from apps.inventory.models import SystemSettings
 from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
-
-from apps.inventory.forms import SystemSettingsForm
-from apps.inventory.models import SystemSettings
 
 web_logger = logging.getLogger("apps.inventory.views")
 audit_logger = logging.getLogger("apps.inventory.audit")

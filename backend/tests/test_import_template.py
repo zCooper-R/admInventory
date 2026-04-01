@@ -14,10 +14,10 @@ import io
 
 import openpyxl
 import pytest
+from apps.inventory.services.template_excel import COLUMNS, build_import_template_bytes
 from django.test import Client
 from django.urls import reverse
 
-from apps.inventory.services.template_excel import COLUMNS, build_import_template_bytes
 from .factories import AdminUserFactory
 
 XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

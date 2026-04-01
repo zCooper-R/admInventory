@@ -3,10 +3,9 @@
 import io
 from decimal import Decimal
 
-from openpyxl import Workbook
-
 from apps.inventory.models import Device, DeviceType
 from apps.inventory.services.template_excel import COLUMNS, NUMBERING_ROW
+from openpyxl import Workbook
 
 
 def _bool_to_yes_no(value: bool | None) -> str:

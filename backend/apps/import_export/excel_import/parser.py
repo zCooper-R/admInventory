@@ -5,7 +5,7 @@ from typing import Any
 
 from openpyxl import load_workbook
 
-from .types import ParseResult, ParsedRow
+from .types import ParsedRow, ParseResult
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +135,10 @@ def parse_excel(path: str) -> ParseResult:
         parsed_rows.append(ParsedRow(row_number=excel_row_number, values=row_data))
 
     logger.info(
-        "Парсинг завершён: total_rows=%s, parsed=%s, skipped_empty=%s, skipped_numbering=%s, skipped_non_device=%s",
+        (
+            "Парсинг завершён: total_rows=%s, parsed=%s, skipped_empty=%s, "
+            "skipped_numbering=%s, skipped_non_device=%s"
+        ),
         total_rows,
         len(parsed_rows),
         skipped_empty_rows,

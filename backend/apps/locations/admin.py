@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Organization, Location
+
+from .models import Location, Organization
 
 
 class LocationInline(admin.TabularInline):

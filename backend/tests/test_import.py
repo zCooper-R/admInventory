@@ -1,9 +1,6 @@
 ﻿import io
 
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
-from openpyxl import Workbook
-
 from apps.import_export.models import ImportLog, ImportStatus
 from apps.import_export.services import process_excel_import
 from apps.inventory.models import (
@@ -14,6 +11,9 @@ from apps.inventory.models import (
     ReplacementStatus,
 )
 from apps.locations.models import Organization
+from django.core.files.uploadedfile import SimpleUploadedFile
+from openpyxl import Workbook
+
 from .factories import AdminUserFactory
 
 HEADERS = [
@@ -41,6 +41,13 @@ HEADERS = [
     "Должность",
 ]
 
+ACCOUNTS_COLUMN = (
+    "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft"
+)
+LONG_ORG_NAME = (
+    "Муниципальное казенное учреждение " "Городской информационно-методический кабинет"
+)
+
 
 def make_excel_bytes(rows: list[dict], include_numbering_row: bool = True) -> bytes:
     wb = Workbook()
@@ -63,10 +70,7 @@ def make_excel_bytes(rows: list[dict], include_numbering_row: bool = True) -> by
                 row.get("Тип диска", ""),
                 row.get("Емкость диска", ""),
                 row.get("Браузер которым пользуетесь", ""),
-                row.get(
-                    "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft",
-                    "",
-                ),
+                row.get(ACCOUNTS_COLUMN, ""),
                 row.get("Скорость интернета", ""),
                 row.get("Провайдер", ""),
                 row.get("Аттестованный компьютер", ""),
@@ -98,7 +102,7 @@ def base_row(**overrides):
         "Тип диска": "SSD",
         "Емкость диска": "512",
         "Браузер которым пользуетесь": "Яндекс Браузер",
-        "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "Аккаунт Google, Аккаунт Microsoft",
+        ACCOUNTS_COLUMN: "Аккаунт Google, Аккаунт Microsoft",
         "Скорость интернета": "Свыше 100 Мб/с",
         "Провайдер": "Ростелеком",
         "Аттестованный компьютер": "Да",
@@ -174,7 +178,7 @@ class TestExcelImportService:
         row2 = base_row(
             **{
                 "Инв. №": "INV-ORG-2",
-                "Наименование юридического лица": "Муниципальное казенное учреждение Городской информационно-методический кабинет",
+                "Наименование юридического лица": LONG_ORG_NAME,
             }
         )
         log = self._create_import_log(make_excel_bytes([row1, row2]))
@@ -186,7 +190,7 @@ class TestExcelImportService:
         row = base_row(
             **{
                 "Инв. №": "INV-ACC",
-                "Наличие личного аккаунта Google, аккаунта Apple или аккаунта Microsoft": "Аккаунт Google, Аккаунт Apple",
+                ACCOUNTS_COLUMN: "Аккаунт Google, Аккаунт Apple",
             }
         )
         log = self._create_import_log(make_excel_bytes([row]))

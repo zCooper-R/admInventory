@@ -4,13 +4,12 @@ Root URL configuration.
 Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
+from config.version import APP_NAME, RELEASE_DATE, VERSION
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
-from django.conf import settings
-from django.conf.urls.static import static
-
-from config.version import APP_NAME, RELEASE_DATE, VERSION
 
 
 def api_version(request):

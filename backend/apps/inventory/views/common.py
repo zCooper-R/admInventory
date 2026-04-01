@@ -2,9 +2,8 @@
 
 import json
 
-from django.http import HttpResponse
-
 from apps.inventory.models import Device, DeviceType
+from django.http import HttpResponse
 
 
 def is_htmx(request) -> bool:

@@ -2,9 +2,8 @@
 
 from dataclasses import dataclass
 
-from django.db.models import Case, IntegerField, Value, When
-
 from apps.inventory.models import Device, DeviceType, ReplacementStatus, SystemSettings
+from django.db.models import Case, IntegerField, Value, When
 
 
 @dataclass(slots=True)

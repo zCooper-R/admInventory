@@ -1,11 +1,11 @@
 ﻿import pytest
-
 from apps.inventory.models import ReplacementStatus, SystemSettings
 from apps.inventory.services.replacement import (
     CPUCategory,
     assess_device_for_replacement,
     classify_cpu,
 )
+
 from .factories import DeviceFactory
 
 

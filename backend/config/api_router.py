@@ -1,8 +1,7 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from apps.locations.views import OrganizationViewSet, LocationViewSet
 from apps.inventory.api_views import DeviceViewSet
+from apps.locations.views import LocationViewSet, OrganizationViewSet
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r"devices", DeviceViewSet, basename="device")

@@ -14,10 +14,6 @@ Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
 import pytest
-from django.core.cache import cache
-from django.test import Client
-from django.urls import reverse
-
 from apps.inventory.models import ReplacementStatus, SystemSettings
 from apps.inventory.services.budget import (
     _BUDGET_CACHE_KEY,
@@ -25,6 +21,10 @@ from apps.inventory.services.budget import (
     get_cached_budget_report,
     invalidate_budget_cache,
 )
+from django.core.cache import cache
+from django.test import Client
+from django.urls import reverse
+
 from .factories import AdminUserFactory, DeviceFactory, UserFactory
 
 

@@ -40,14 +40,22 @@ def process_excel_import(import_log: ImportLog) -> None:
     except Exception as exc:
         logger.exception("Failed to parse excel")
         import_log.status = ImportStatus.FAILED
-        import_log.errors = [{"row": 0, "message": f"Не удалось прочитать файл: {exc}"}]
+        import_log.errors = [
+            {
+                "row": 0,
+                "message": f"Не удалось прочитать файл: {exc}",
+            }
+        ]
         import_log.error_count = 1
         import_log.save(update_fields=["status", "errors", "error_count"])
         return
 
     import_log.total_rows = parsed.total_rows
     logger.info(
-        "Результат парсинга: import_id=%s total_rows=%s skipped_empty=%s skipped_numbering=%s skipped_non_device=%s",
+        (
+            "Результат парсинга: import_id=%s total_rows=%s "
+            "skipped_empty=%s skipped_numbering=%s skipped_non_device=%s"
+        ),
         import_log.pk,
         parsed.total_rows,
         parsed.skipped_empty_rows,
