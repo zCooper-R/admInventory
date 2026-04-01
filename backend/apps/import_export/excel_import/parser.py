@@ -110,7 +110,6 @@ def parse_excel(path: str) -> ParseResult:
             for field_name, idx in header_idx.items()
         }
 
-        # Skip physical-empty rows and technical tail rows using only known mapped columns.
         mapped_values = [row_data.get(field_name, "") for field_name in header_idx.keys()]
         if not any(mapped_values):
             skipped_empty_rows += 1

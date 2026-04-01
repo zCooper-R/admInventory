@@ -9,7 +9,7 @@
         <thead>
           <tr class="table-header-row">
             <th class="ps-3 col-sticky-inv"><a class="sort-link" hx-get="{% sort_url 'inventory_number' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Инв. номер{% if sort == 'inventory_number' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
-            <th class="col-sticky-org"><a class="sort-link" hx-get="{% sort_url 'organization__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Организация{% if sort == 'organization__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
+            <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'organization__name' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Организация{% if sort == 'organization__name' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th><a class="sort-link" hx-get="{% sort_url 'os' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">ОС{% if sort == 'os' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-lg-table-cell"><a class="sort-link" hx-get="{% sort_url 'cpu_model' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Процессор{% if sort == 'cpu_model' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
             <th class="d-none d-xl-table-cell"><a class="sort-link" hx-get="{% sort_url 'cpu_frequency' %}" hx-target="#pc-table-wrapper" hx-push-url="true" hx-include="#filterForm">Частота{% if sort == 'cpu_frequency' %}<i class="bi {% if direction == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %} text-primary ms-1"></i>{% endif %}</a></th>
@@ -38,7 +38,7 @@
               </div>
               <div class="d-md-none text-muted mt-1" style="font-size:.75rem;">{{ pc.employee_name|default:'—' }}</div>
             </td>
-            <td class="col-sticky-org" title="{{ pc.organization.name }}">
+            <td class="d-none d-lg-table-cell" title="{{ pc.organization.name }}">
               <span class="cell-clamp cell-org">{{ pc.organization.name }}</span>
             </td>
             <td>{{ pc.os|default:'—' }}</td>
