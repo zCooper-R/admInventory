@@ -32,7 +32,7 @@ services:
       LOG_DIR: /app/logs
     volumes:
       - ./backend:/app
-      - ./backend/logs:/app/logs
+      - ./logs:/app/logs
       - media_volume:/app/media
       - static_volume:/app/staticfiles
     ports:
