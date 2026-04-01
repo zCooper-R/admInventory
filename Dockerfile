@@ -11,16 +11,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Dedicated logs directory in app root.
-RUN mkdir -p /app/logs && chmod 0777 /app/logs
+RUN useradd -m -u 1000 django && \
+    mkdir -p /app /app/staticfiles /app/media /app/logs && \
+    chown -R django:django /app
 
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY backend/ .
+COPY --chown=django:django backend/ .
 
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh && chown django:django /entrypoint.sh
+
+USER django
 
 EXPOSE 8000
 
