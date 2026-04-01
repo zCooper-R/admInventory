@@ -1,7 +1,11 @@
-﻿from django.contrib.auth.decorators import login_required
+import logging
+
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from apps.inventory.services.budget import build_budget_report, get_cached_budget_report
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -16,6 +20,15 @@ def budget_report(request):
         price_per_pc = None
 
     report = build_budget_report(price_per_pc) if price_per_pc else get_cached_budget_report()
+    logger.info(
+        "Открыт отчёт бюджета: user=%s price=%s devices=%s replace=%s attention=%s ok=%s",
+        request.user.username,
+        report.price_per_pc,
+        report.total_pcs,
+        report.replacement_count,
+        report.attention_count,
+        report.ok_count,
+    )
 
     return render(
         request,

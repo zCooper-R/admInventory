@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import json
+import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,7 @@ from apps.inventory.services.budget import get_cached_budget_report
 from apps.inventory.views.common import htmx_close_and_refresh, is_htmx, pc_qs
 
 _PAGE_SIZE = 25
+logger = logging.getLogger(__name__)
 
 
 def _apply_sorting(qs, sort: str, direction: str):
@@ -172,6 +174,7 @@ def pc_create_modal(request):
             pc = form.save(commit=False)
             pc.device_type = DeviceType.PC
             pc.save()
+            logger.info("Создано устройство через модалку: user=%s inventory=%s", request.user.username, pc.inventory_number)
             return htmx_close_and_refresh(f"Устройство [{pc.inventory_number}] создано.")
         return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(form, "Добавить устройство", action_url, True))
     return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(PCForm(), "Добавить устройство", action_url, True))
@@ -187,6 +190,7 @@ def pc_edit_modal(request, pk: int):
         form = PCForm(request.POST, instance=pc)
         if form.is_valid():
             form.save()
+            logger.info("Обновлено устройство через модалку: user=%s inventory=%s", request.user.username, pc.inventory_number)
             return htmx_close_and_refresh(f"Устройство [{pc.inventory_number}] обновлено.")
         return render(request, "inventory/_partials/pc_form_modal.html", _modal_ctx(form, title, action_url, False, pc))
 
@@ -199,6 +203,7 @@ def pc_delete_modal(request, pk: int):
     if request.method == "POST":
         inv = pc.inventory_number
         pc.delete()
+        logger.info("Удалено устройство через модалку: user=%s inventory=%s", request.user.username, inv)
         return htmx_close_and_refresh(f"Устройство [{inv}] удалено.", event="pcDeleted")
     return render(request, "inventory/_partials/pc_delete_modal.html", {"pc": pc})
 
@@ -211,6 +216,7 @@ def pc_create(request):
             pc = form.save(commit=False)
             pc.device_type = DeviceType.PC
             pc.save()
+            logger.info("Создано устройство: user=%s inventory=%s", request.user.username, pc.inventory_number)
             messages.success(request, f"Устройство [{pc.inventory_number}] создано.")
             return redirect("pc-list")
     else:
@@ -225,6 +231,7 @@ def pc_edit(request, pk: int):
         form = PCForm(request.POST, instance=pc)
         if form.is_valid():
             form.save()
+            logger.info("Обновлено устройство: user=%s inventory=%s", request.user.username, pc.inventory_number)
             messages.success(request, f"Устройство [{pc.inventory_number}] обновлено.")
             return redirect("pc-list")
     else:
@@ -238,6 +245,7 @@ def pc_delete(request, pk: int):
     if request.method == "POST":
         inv = pc.inventory_number
         pc.delete()
+        logger.info("Удалено устройство: user=%s inventory=%s", request.user.username, inv)
         messages.success(request, f"Устройство [{inv}] удалено.")
         return redirect("pc-list")
     return render(request, "inventory/pc_confirm_delete.html", {"nav_active": "computers", "pc": pc})

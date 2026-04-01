@@ -409,6 +409,56 @@ body {
 .table-striped > tbody > tr:nth-of-type(odd) > * { background: var(--trow-odd) !important; }
 .table-hover > tbody > tr:hover > * { background: var(--trow-hover) !important; }
 
+.pc-table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.pc-data-table {
+  min-width: 1680px;
+  table-layout: fixed;
+}
+
+.pc-data-table th,
+.pc-data-table td {
+  vertical-align: middle;
+}
+
+.text-truncate-cell {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 992px) {
+  .pc-data-table .col-sticky-inv {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 175px;
+    max-width: 175px;
+    background: var(--card-bg) !important;
+    box-shadow: 1px 0 0 var(--border-clr);
+  }
+
+  .pc-data-table .col-sticky-org {
+    position: sticky;
+    left: 175px;
+    z-index: 2;
+    min-width: 230px;
+    max-width: 230px;
+    background: var(--card-bg) !important;
+    box-shadow: 1px 0 0 var(--border-clr);
+  }
+
+  .pc-data-table thead .col-sticky-inv,
+  .pc-data-table thead .col-sticky-org {
+    z-index: 4;
+    background: var(--thead-bg) !important;
+  }
+}
+
 /* Density modes */
 [data-density="compact"]     .table > :not(caption) > * > * { padding: .3rem .75rem; }
 [data-density="comfortable"] .table > :not(caption) > * > * { padding: 1rem .75rem; }
@@ -425,6 +475,19 @@ body {
 }
 .sort-link:hover { color: #2563eb; }
 [data-bs-theme="dark"] .sort-link:hover { color: #60a5fa; }
+
+.pagination .page-link {
+  cursor: pointer;
+}
+
+.page-link-clickable {
+  cursor: pointer;
+}
+
+.page-item.disabled .page-link,
+.page-link-disabled {
+  cursor: not-allowed;
+}
 
 /* Status badges */
 .status-badge {
@@ -682,6 +745,7 @@ kbd {
 
   /* ── Mobile PC table → card layout ───────────────────────────────────── */
   .pc-mobile-card-table .table-responsive { overflow: visible; }
+  .pc-mobile-card-table.pc-table-wrap { overflow: visible; }
   .pc-mobile-card-table thead { display: none; }
   .pc-mobile-card-table tbody { display: flex; flex-direction: column; gap: .75rem; padding: .75rem; }
 

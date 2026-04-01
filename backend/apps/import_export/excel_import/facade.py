@@ -25,7 +25,12 @@ class ImportResult:
 
 
 def process_excel_import(import_log: ImportLog) -> None:
-    logger.info("Starting import for ImportLog #%s", import_log.pk)
+    logger.info(
+        "Старт импорта: import_id=%s file=%s user=%s",
+        import_log.pk,
+        import_log.file.name,
+        getattr(import_log.uploaded_by, "username", "unknown"),
+    )
 
     import_log.status = ImportStatus.PROCESSING
     import_log.save(update_fields=["status"])
@@ -41,6 +46,14 @@ def process_excel_import(import_log: ImportLog) -> None:
         return
 
     import_log.total_rows = parsed.total_rows
+    logger.info(
+        "Результат парсинга: import_id=%s total_rows=%s skipped_empty=%s skipped_numbering=%s skipped_non_device=%s",
+        import_log.pk,
+        parsed.total_rows,
+        parsed.skipped_empty_rows,
+        parsed.skipped_numbering_rows,
+        parsed.skipped_non_device_rows,
+    )
     result = ImportResult()
 
     for row in parsed.rows:
@@ -75,4 +88,12 @@ def process_excel_import(import_log: ImportLog) -> None:
             "error_count",
             "errors",
         ]
+    )
+    logger.info(
+        "Импорт завершён: import_id=%s status=%s created=%s updated=%s errors=%s",
+        import_log.pk,
+        import_log.status,
+        import_log.created_count,
+        import_log.updated_count,
+        import_log.error_count,
     )

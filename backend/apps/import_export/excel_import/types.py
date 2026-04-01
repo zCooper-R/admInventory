@@ -12,3 +12,6 @@ class ParsedRow:
 class ParseResult:
     rows: list[ParsedRow]
     total_rows: int
+    skipped_empty_rows: int = 0
+    skipped_numbering_rows: int = 0
+    skipped_non_device_rows: int = 0

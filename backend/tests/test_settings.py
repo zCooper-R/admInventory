@@ -20,6 +20,7 @@ from django.urls import reverse
 from apps.inventory.models import ReplacementStatus, SystemSettings
 from apps.inventory.services.budget import (
     _BUDGET_CACHE_KEY,
+    build_budget_report,
     get_cached_budget_report,
     invalidate_budget_cache,
 )
@@ -188,3 +189,13 @@ class TestBudgetCache:
         report2 = get_cached_budget_report()
         assert report1.total_pcs == report2.total_pcs
         assert report1.price_per_pc == report2.price_per_pc
+
+    def test_budget_default_ordering_is_replace_attention_ok(self):
+        DeviceFactory(inventory_number="INV-OK", replacement_status=ReplacementStatus.OK, replacement_score=9)
+        DeviceFactory(inventory_number="INV-ATTN", replacement_status=ReplacementStatus.ATTENTION, replacement_score=3)
+        DeviceFactory(inventory_number="INV-REPL-2", replacement_status=ReplacementStatus.REPLACE, replacement_score=4)
+        DeviceFactory(inventory_number="INV-REPL-1", replacement_status=ReplacementStatus.REPLACE, replacement_score=2)
+
+        report = build_budget_report()
+        ordered_numbers = [d.inventory_number for d in report.devices]
+        assert ordered_numbers == ["INV-REPL-1", "INV-REPL-2", "INV-ATTN", "INV-OK"]

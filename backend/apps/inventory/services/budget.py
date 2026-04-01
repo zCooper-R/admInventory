@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from django.db.models import Case, IntegerField, Value, When
+
 from apps.inventory.models import Device, DeviceType, ReplacementStatus, SystemSettings
 
 
@@ -54,10 +56,19 @@ def build_budget_report(price_per_pc: int | None = None) -> BudgetReport:
     cfg = SystemSettings.get()
     effective_price = price_per_pc if price_per_pc is not None else cfg.pc_price_default
 
+    status_order = Case(
+        When(replacement_status=ReplacementStatus.REPLACE, then=Value(0)),
+        When(replacement_status=ReplacementStatus.ATTENTION, then=Value(1)),
+        When(replacement_status=ReplacementStatus.OK, then=Value(2)),
+        default=Value(3),
+        output_field=IntegerField(),
+    )
+
     devices = list(
         Device.objects.filter(device_type=DeviceType.PC)
+        .annotate(_status_order=status_order)
         .select_related("organization", "position", "browser")
-        .order_by("organization__name", "inventory_number")
+        .order_by("_status_order", "replacement_score", "organization__name", "inventory_number")
     )
 
     grouped: dict[int, dict] = {}

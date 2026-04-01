@@ -1,10 +1,13 @@
 ﻿from __future__ import annotations
 
+import logging
 from typing import Any
 
 from openpyxl import load_workbook
 
 from .types import ParseResult, ParsedRow
+
+logger = logging.getLogger(__name__)
 
 HEADER_ALIASES: dict[str, str] = {
     "наименование юридического лица": "organization_name",
@@ -70,6 +73,7 @@ def _is_device_row(values: dict[str, str]) -> bool:
 
 
 def parse_excel(path: str) -> ParseResult:
+    logger.info("Начало парсинга Excel: path=%s", path)
     wb = load_workbook(path, read_only=True, data_only=True)
     ws = wb.active
 
@@ -95,6 +99,9 @@ def parse_excel(path: str) -> ParseResult:
 
     parsed_rows: list[ParsedRow] = []
     total_rows = 0
+    skipped_empty_rows = 0
+    skipped_numbering_rows = 0
+    skipped_non_device_rows = 0
 
     for excel_row_number, raw_row in enumerate(rows_iter, start=2):
         row_values = [_normalize_cell(v) for v in raw_row]
@@ -106,13 +113,30 @@ def parse_excel(path: str) -> ParseResult:
         # Skip physical-empty rows and technical tail rows using only known mapped columns.
         mapped_values = [row_data.get(field_name, "") for field_name in header_idx.keys()]
         if not any(mapped_values):
+            skipped_empty_rows += 1
             continue
         if _is_numbering_row(mapped_values):
+            skipped_numbering_rows += 1
             continue
         if not _is_device_row(row_data):
+            skipped_non_device_rows += 1
             continue
 
         total_rows += 1
         parsed_rows.append(ParsedRow(row_number=excel_row_number, values=row_data))
 
-    return ParseResult(rows=parsed_rows, total_rows=total_rows)
+    logger.info(
+        "Парсинг завершён: total_rows=%s, parsed=%s, skipped_empty=%s, skipped_numbering=%s, skipped_non_device=%s",
+        total_rows,
+        len(parsed_rows),
+        skipped_empty_rows,
+        skipped_numbering_rows,
+        skipped_non_device_rows,
+    )
+    return ParseResult(
+        rows=parsed_rows,
+        total_rows=total_rows,
+        skipped_empty_rows=skipped_empty_rows,
+        skipped_numbering_rows=skipped_numbering_rows,
+        skipped_non_device_rows=skipped_non_device_rows,
+    )

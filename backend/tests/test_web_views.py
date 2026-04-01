@@ -78,3 +78,21 @@ class TestWebViews:
         body = response.content.decode("utf-8")
         assert "Статус замены" in body
         assert "Инв. номер" in body
+
+    def test_pc_table_has_wide_layout_classes(self, client_auth):
+        DeviceFactory()
+        response = client_auth.get(reverse("pc-list"))
+        assert response.status_code == 200
+        body = response.content.decode("utf-8")
+        assert "pc-table-wrap" in body
+        assert "pc-data-table" in body
+        assert "col-sticky-inv" in body
+        assert "col-sticky-org" in body
+
+    def test_pagination_has_clickable_and_disabled_cursor_classes(self, client_auth):
+        DeviceFactory.create_batch(40)
+        response = client_auth.get(reverse("pc-list"))
+        assert response.status_code == 200
+        body = response.content.decode("utf-8")
+        assert "page-link-clickable" in body
+        assert "page-link-disabled" in body

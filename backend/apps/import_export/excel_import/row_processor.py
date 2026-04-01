@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from django.db import transaction
@@ -17,6 +18,8 @@ from .normalizers import (
 )
 from .resolvers import BrowserResolver, OrganizationResolver, PositionResolver
 from .types import ParsedRow
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -91,9 +94,20 @@ def process_row(parsed_row: ParsedRow) -> RowApplyResult:
     created = device is None
     if created:
         device = Device(inventory_number=inventory_number, organization=organization)
+        logger.debug("Создаётся новое устройство: row=%s inventory=%s", parsed_row.row_number, inventory_number)
+    else:
+        logger.debug("Обновляется устройство: row=%s inventory=%s", parsed_row.row_number, inventory_number)
 
     for field_name, field_value in values_to_apply.items():
         setattr(device, field_name, field_value)
     device.save()
+
+    logger.info(
+        "Строка обработана: row=%s inventory=%s action=%s organization=%s",
+        parsed_row.row_number,
+        inventory_number,
+        "create" if created else "update",
+        organization.name,
+    )
 
     return RowApplyResult(created=created)

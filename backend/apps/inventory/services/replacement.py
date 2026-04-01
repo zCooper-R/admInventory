@@ -1,12 +1,14 @@
 ﻿from __future__ import annotations
 
 import re
+import logging
 from dataclasses import dataclass
 from typing import Literal
 
 from apps.inventory.models import ReplacementStatus, StorageType, SystemSettings
 
 ReplacementStatusLiteral = Literal["ok", "attention", "replace"]
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -149,6 +151,12 @@ def _cpu_score(device, cfg: SystemSettings) -> tuple[int, str]:
 def assess_device_for_replacement(device) -> ReplacementAssessment:
     """Replacement assessment based only on hardware: RAM + storage + CPU."""
     cfg = SystemSettings.get()
+    logger.debug(
+        "Пересчёт replacement: inventory=%s cfg(attention=%s, ok=%s)",
+        getattr(device, "inventory_number", ""),
+        cfg.replacement_attention_threshold,
+        cfg.replacement_ok_threshold,
+    )
 
     ram_score, ram_reason = _ram_score(device, cfg)
     storage_score, storage_reason = _storage_score(device, cfg)
@@ -169,5 +177,19 @@ def assess_device_for_replacement(device) -> ReplacementAssessment:
         cpu_reason,
         f"Итоговый балл: {total_score}",
     ]
+    if cpu_reason.endswith("нераспознанный"):
+        logger.warning(
+            "CPU не распознан: inventory=%s cpu_model=%s assigned_score=%s",
+            getattr(device, "inventory_number", ""),
+            getattr(device, "cpu_model", ""),
+            cpu_score,
+        )
+    logger.info(
+        "replacement рассчитан: inventory=%s status=%s score=%s reasons=%s",
+        getattr(device, "inventory_number", ""),
+        status,
+        total_score,
+        "; ".join(reasons),
+    )
 
     return ReplacementAssessment(status=status, score=total_score, reasons=reasons)
