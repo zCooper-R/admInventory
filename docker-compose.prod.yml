@@ -36,7 +36,6 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-      - logs_volume:/app/logs
     expose:
       - "8000"
     depends_on:
@@ -60,4 +59,3 @@ volumes:
   postgres_data:
   static_volume:
   media_volume:
-  logs_volume:
