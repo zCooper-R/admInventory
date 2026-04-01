@@ -24,8 +24,6 @@ COPY --chown=django:django backend/ .
 COPY docker/entrypoint.prod.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh && chown django:django /entrypoint.sh
 
-USER django
-
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -1,14 +1,20 @@
 #!/bin/sh
 set -e
 
+run_as_django() {
+  su -s /bin/sh django -c "$*"
+}
+
 LOG_DIR=${LOG_DIR:-/app/logs}
 echo "Preparing log directory: ${LOG_DIR}"
 mkdir -p "${LOG_DIR}"
-touch "${LOG_DIR}/.write_test"
+chown -R django:django "${LOG_DIR}" || true
+chmod -R u+rwX,g+rwX "${LOG_DIR}" || true
+run_as_django "touch '${LOG_DIR}/.write_test'"
 rm -f "${LOG_DIR}/.write_test"
 
 echo "Waiting for database..."
-until python -c "
+until run_as_django "python -c \"
 import os, psycopg2
 try:
     conn = psycopg2.connect(
@@ -23,19 +29,19 @@ try:
 except Exception as e:
     print(f'DB not ready: {e}')
     exit(1)
-"; do
+\""; do
   sleep 1
 done
 
 
 echo "Running migrations..."
-python manage.py migrate --noinput
+run_as_django "python manage.py migrate --noinput"
 
 echo "Collecting static files..."
-python manage.py collectstatic --noinput
+run_as_django "python manage.py collectstatic --noinput"
 
 echo "Loading demo data (skips if already present)..."
-python manage.py create_demo_data || echo "Demo data step skipped."
+run_as_django "python manage.py create_demo_data" || echo "Demo data step skipped."
 
 echo "Starting server..."
-exec python manage.py runserver 0.0.0.0:8000
+exec su -s /bin/sh django -c "python manage.py runserver 0.0.0.0:8000"
