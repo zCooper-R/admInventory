@@ -1,19 +1,14 @@
 """
-Excel import / export / template-download views.
-
-Author : Литвин Олег Олегович <qucooper@yandex.ru>
+Excel import / template-download views.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 
 from apps.import_export.models import ImportLog
 from apps.import_export.services import process_excel_import
 from apps.inventory.forms import PCImportForm
-from apps.inventory.models import Device, DeviceType, ReplacementStatus
-from apps.inventory.services.export import export_pcs_to_excel
 from apps.inventory.services.template_excel import build_import_template_bytes
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -25,12 +20,6 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def pc_import_template(request):
-    """
-    Generate and stream the blank Excel import template.
-
-    Delegates to :func:`~apps.inventory.services.template_excel.build_import_template_bytes`,
-    the single source of truth shared with the ``create_sample_excel`` management command.
-    """
     response = HttpResponse(
         build_import_template_bytes(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -41,14 +30,6 @@ def pc_import_template(request):
 
 @login_required
 def pc_import(request):
-    """
-    Excel import page.
-
-    GET  → show the upload form and the 8 most-recent import logs.
-    POST → validate the uploaded file, create an :class:`~apps.import_export.models.ImportLog`
-           record, and delegate processing to
-           :func:`~apps.import_export.services.process_excel_import`.
-    """
     if request.method == "POST":
         form = PCImportForm(request.POST, request.FILES)
         if form.is_valid():
@@ -88,42 +69,3 @@ def pc_import(request):
             )[:8],
         },
     )
-
-
-@login_required
-def pc_export(request):
-    """
-    Generate and stream an Excel workbook containing all PC devices.
-
-    The filename is ``computers_YYYYMMDD_HHMMSS.xlsx`` and is served
-    as a browser download attachment.
-    """
-    try:
-        queryset = Device.objects.filter(device_type=DeviceType.PC)
-        organization_id = request.GET.get("organization", "").strip()
-        replacement_status = request.GET.get("replacement_status", "").strip()
-        storage_type = request.GET.get("storage_type", "").strip()
-
-        if organization_id:
-            queryset = queryset.filter(organization_id=organization_id)
-        if replacement_status in {
-            ReplacementStatus.OK,
-            ReplacementStatus.ATTENTION,
-            ReplacementStatus.REPLACE,
-        }:
-            queryset = queryset.filter(replacement_status=replacement_status)
-        if storage_type in {"SSD", "HDD"}:
-            queryset = queryset.filter(storage_type=storage_type)
-
-        excel_bytes = export_pcs_to_excel(queryset=queryset)
-        filename = f"computers_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-        response = HttpResponse(
-            excel_bytes,
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-        response["Content-Disposition"] = f'attachment; filename="{filename}"'
-        return response
-    except Exception as exc:
-        logger.exception("Excel export failed")
-        messages.error(request, f"Ошибка экспорта: {exc}")
-        return redirect("pc-list")

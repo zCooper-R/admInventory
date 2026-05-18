@@ -9,7 +9,8 @@ Author : Литвин Олег Олегович <qucooper@yandex.ru>
 """
 
 from apps.inventory.views.views_budget import budget_report
-from apps.inventory.views.views_import import pc_export, pc_import, pc_import_template
+from apps.inventory.views.views_export import organization_budget_export, pc_export
+from apps.inventory.views.views_import import pc_import, pc_import_template
 from apps.inventory.views.views_logs import logs_download_view, logs_view
 from apps.inventory.views.views_pc import (
     critical_count_partial,
@@ -40,6 +41,7 @@ __all__ = [
     # Import / Export
     "pc_import",
     "pc_export",
+    "organization_budget_export",
     "pc_import_template",
     # Settings
     "system_settings_view",

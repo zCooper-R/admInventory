@@ -32,6 +32,11 @@ urlpatterns = [
     path("pcs/import/", views.pc_import, name="pc-import"),
     path("pcs/import/template/", views.pc_import_template, name="pc-import-template"),
     path("pcs/export/", views.pc_export, name="pc-export"),
+    path(
+        "pcs/export/organization-budget/",
+        views.organization_budget_export,
+        name="organization-budget-export",
+    ),
     # Budget / replacement report
     path("pcs/budget/", views.budget_report, name="budget-report"),
     # System settings (admin only)
